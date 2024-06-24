@@ -3,7 +3,7 @@
     "name": "Focus Mode with Access Passes",
     "version": "1.0",
     "description": "Block distracting websites with timed access passes",
-    "permissions": ["storage", "tabs", "webNavigation", "activeTab"],
+    "permissions": ["storage", "tabs", "webNavigation", "activeTab", "alarms"],
     "host_permissions": ["<all_urls>"],
     "action": {
       "default_popup": "popup.html",
