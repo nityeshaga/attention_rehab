@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Blocked</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            color: white;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .pass-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .pass-button {
+            background-color: white;
+            color: #0072ff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .pass-button:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px);
+        }
+    </style>
+    <script src="blocked.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🛡️</div>
+        <h1>This site is blocked</h1>
+        <p>Use an access pass to continue:</p>
+        <div class="pass-buttons">
+            <button class="pass-button" data-duration="1">1-min access pass</button>
+            <button class="pass-button" data-duration="5">5-min access pass</button>
+            <button class="pass-button" data-duration="15">15-min access pass</button>
+        </div>
+    </div>
+</body>
+</html>
