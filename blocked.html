@@ -37,6 +37,14 @@
             gap: 1rem;
             margin-top: 2rem;
         }
+        
+        .pass-button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
         .pass-button {
             background-color: white;
             color: #0072ff;
@@ -45,10 +53,19 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s, transform 0.3s;
+            margin-bottom: 5px;
         }
+
         .pass-button:hover {
             background-color: #f0f0f0;
             transform: translateY(-2px);
+        }
+
+        .pass-count {
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.7);
+            display: block;
+            margin-top: 5px;
         }
 
         .footer {
@@ -81,9 +98,18 @@
         <h1>Time to get back to work!</h1>
         <p>This site is blocked. If you really have to, use an access pass to continue:</p>
         <div class="pass-buttons">
-            <button class="pass-button" data-duration="1">"Look something up real quick" pass</button>
-            <button class="pass-button" data-duration="5">"Do a little research" pass</button>
-            <button class="pass-button" data-duration="15">"I'm on a break" pass</button>
+            <div class="pass-button-container">
+                <button class="pass-button" data-duration="1">"Look something up real quick" pass</button>
+                <span class="pass-count" id="count-1"></span>
+            </div>
+            <div class="pass-button-container">
+                <button class="pass-button" data-duration="5">"Do a little research" pass</button>
+                <span class="pass-count" id="count-5"></span>
+            </div>
+            <div class="pass-button-container">
+                <button class="pass-button" data-duration="15">"I'm on a break" pass</button>
+                <span class="pass-count" id="count-15"></span>
+            </div>
         </div>
     </div>
     <div class="footer">

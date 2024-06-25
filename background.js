@@ -21,13 +21,62 @@ function shouldBlockUrl(url, blockedSites) {
   });
 }
 
+// New code for pass tracking
+function getToday() {
+  return new Date().toDateString();
+}
+
+function initializeDailyPassCounts() {
+  chrome.storage.local.get(['passCounts', 'lastResetDate'], (result) => {
+    const today = getToday();
+    if (result.lastResetDate !== today) {
+      chrome.storage.local.set({
+        passCounts: {
+          '1': 0,
+          '5': 0,
+          '15': 0
+        },
+        lastResetDate: today
+      });
+    }
+  });
+}
+
+function incrementPassCount(duration) {
+  chrome.storage.local.get(['passCounts', 'lastResetDate'], (result) => {
+    const today = getToday();
+    let { passCounts, lastResetDate } = result;
+
+    if (lastResetDate !== today) {
+      passCounts = { '1': 0, '5': 0, '15': 0 };
+      lastResetDate = today;
+    }
+
+    passCounts[duration] = (passCounts[duration] || 0) + 1;
+
+    chrome.storage.local.set({ passCounts, lastResetDate });
+  });
+}
+
+// Initialize pass counts on extension start
+chrome.runtime.onInstalled.addListener(() => {
+  initializeDailyPassCounts();
+});
+
+// Reset pass counts daily
+chrome.alarms.create('resetPassCounts', { periodInMinutes: 1440 }); // 24 hours
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'resetPassCounts') {
+    initializeDailyPassCounts();
+  }
+});
+
 // Initialize alarms when the extension starts
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.clearAll();
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Received message:', request);
   if (request.action === 'requestPass') {
     console.log('Pass requested for', request.duration, 'minutes');
     
@@ -50,6 +99,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
       
       console.log(`Alarm set for ${request.duration} minutes from now`);
+
+      // Increment pass count
+      incrementPassCount(request.duration);
 
       // Grant the pass immediately and redirect
       chrome.storage.local.get(['blockedUrl'], function(result) {
@@ -85,7 +137,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     
     return true; // for asynchronous response
-  } else if (request.action === 'redirect') {
+  }
+  
+  else if (request.action === 'redirect') {
     console.log('Redirect requested to:', request.url);
     chrome.tabs.update(sender.tab.id, {url: request.url}, tab => {
       if (chrome.runtime.lastError) {
