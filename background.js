@@ -10,13 +10,13 @@ function shouldBlockUrl(url, blockedSites) {
     const cleanBlockedSite = blockedSite.replace(/^(https?:\/\/)?(www\.)?/, '');
     const cleanUrlHostname = urlObj.hostname.replace(/^www\./, '');
 
-    // Check if it's a domain-level block or a specific path block
-    if (cleanBlockedSite.includes('/')) {
-      // Specific path block
-      return url.includes(cleanBlockedSite);
-    } else {
-      // Domain-level block
+    // Check if it's a domain-level block
+    if (!cleanBlockedSite.includes('/')) {
       return cleanUrlHostname === cleanBlockedSite || cleanUrlHostname.endsWith('.' + cleanBlockedSite);
+    } else {
+      // It's a specific path block, so block the entire domain
+      const blockedDomain = cleanBlockedSite.split('/')[0];
+      return cleanUrlHostname === blockedDomain || cleanUrlHostname.endsWith('.' + blockedDomain);
     }
   });
 }
