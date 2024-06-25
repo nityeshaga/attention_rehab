@@ -55,12 +55,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       chrome.storage.local.get(['blockedUrl'], function(result) {
         if (result.blockedUrl) {
           console.log('Redirecting to:', result.blockedUrl);
-          chrome.tabs.update(tabId, {url: result.blockedUrl}, function() {
+          chrome.tabs.update(tabId, {url: result.blockedUrl}, function(tab) {
             if (chrome.runtime.lastError) {
               console.error('Error redirecting:', chrome.runtime.lastError);
               sendResponse({granted: false, error: chrome.runtime.lastError.message});
             } else {
               console.log('Redirect initiated');
+              // Inject the content script after the redirect
+              chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+                if (tabId === tab.id && info.status === 'complete') {
+                  chrome.tabs.onUpdated.removeListener(listener);
+                  chrome.scripting.executeScript({
+                    target: {tabId: tab.id},
+                    files: ['timer.js']
+                  }, () => {
+                    // Send message to content script with pass duration
+                    chrome.tabs.sendMessage(tab.id, {action: 'startTimer', duration: request.duration});
+                  });
+                }
+              });
               sendResponse({granted: true});
             }
           });
