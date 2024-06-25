@@ -50,6 +50,28 @@
             background-color: #f0f0f0;
             transform: translateY(-2px);
         }
+
+        .footer {
+            position: fixed;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+            padding: 5px;
+        }
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: white;
+        }
     </style>
     <script src="blocked.js"></script>
 </head>
@@ -63,6 +85,9 @@
             <button class="pass-button" data-duration="5">"Do a little research" pass</button>
             <button class="pass-button" data-duration="15">"I'm on a break" pass</button>
         </div>
+    </div>
+    <div class="footer">
+        Built for creators by <a href="https://beginnermaps.com" target="_blank">Beginner Maps</a>
     </div>
 </body>
 </html>
