@@ -5,11 +5,17 @@ body {
     background-color: #f5f5f5;
   }
   
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
   h1 {
     color: #333;
     font-size: 24px;
-    margin-bottom: 15px;
-    text-align: center;
+    margin: 0;
   }
   
   h2 {
@@ -19,8 +25,13 @@ body {
     margin-bottom: 10px;
   }
   
+  .input-group {
+    display: flex;
+    margin-bottom: 10px;
+  }
+  
   input[type="text"] {
-    width: 70%;
+    flex-grow: 1;
     padding: 8px;
     margin-right: 5px;
     border: 1px solid #ddd;
@@ -114,20 +125,4 @@ body {
   
   input:checked + .slider:before {
     transform: translateX(26px);
-  }
-  
-  #access-passes {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 15px;
-  }
-  
-  #access-passes button {
-    flex: 1;
-    margin: 0 5px;
-    background-color: #2196F3;
-  }
-  
-  #access-passes button:hover {
-    background-color: #19d23e;
   }

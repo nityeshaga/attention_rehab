@@ -5,26 +5,25 @@
   <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
-  <h1>Focus Mode</h1>
+  <div class="header">
+    <h1>Focus Mode</h1>
+    <div id="work-mode">
+      <label class="switch">
+        <input type="checkbox" id="work-mode-toggle">
+        <span class="slider round"></span>
+      </label>
+    </div>
+  </div>
+  
   <div id="blocked-sites">
     <h2>Blocked Sites</h2>
-    <input type="text" id="new-site" placeholder="Add site to block">
-    <button id="add-site">Add</button>
+    <div class="input-group">
+      <input type="text" id="new-site" placeholder="Add site to block">
+      <button id="add-site">Add</button>
+    </div>
     <ul id="site-list"></ul>
   </div>
-  <div id="work-mode">
-    <h2>Work Mode</h2>
-    <label class="switch">
-      <input type="checkbox" id="work-mode-toggle">
-      <span class="slider round"></span>
-    </label>
-  </div>
-  <div id="access-passes">
-    <h2>Access Passes</h2>
-    <button id="pass-1min">1-min pass</button>
-    <button id="pass-5min">5-min pass</button>
-    <button id="pass-15min">15-min pass</button>
-  </div>
+  
   <script src="popup.js"></script>
 </body>
 </html>
