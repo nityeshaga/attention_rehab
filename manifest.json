@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "Focus Mode with Access Passes",
+    "name": "Attention Rehab",
     "version": "1.0",
     "description": "Block distracting websites with timed access passes",
     "permissions": ["storage", "tabs", "webNavigation", "activeTab", "alarms", "scripting"],
