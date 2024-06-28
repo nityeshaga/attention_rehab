@@ -4,7 +4,16 @@
     "version": "1.0",
     "description": "Block distracting websites with timed access passes",
     "permissions": ["storage", "tabs", "webNavigation", "activeTab", "alarms", "scripting"],
-    "host_permissions": ["<all_urls>"],
+    "host_permissions": [
+      "*://*.x.com/*",
+      "*://*.linkedin.com/*",
+      "*://*.youtube.com/*",
+      "*://*.instagram.com/*",
+      "*://*.facebook.com/*",
+      "*://*.twitter.com/*",
+      "*://*.tiktok.com/*",
+      "*://*.twitch.tv/*"
+    ],
     "action": {
       "default_popup": "popup.html",
       "default_icon": {
