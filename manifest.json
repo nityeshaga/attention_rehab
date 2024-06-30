@@ -3,7 +3,7 @@
     "name": "Attention Rehab",
     "version": "1.0",
     "description": "Block distracting websites with timed access passes",
-    "permissions": ["storage", "tabs", "webNavigation", "activeTab", "alarms", "scripting"],
+    "permissions": ["storage", "tabs", "activeTab", "alarms", "scripting"],
     "host_permissions": [
       "*://*.x.com/*",
       "*://*.linkedin.com/*",
