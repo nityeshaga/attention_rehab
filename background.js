@@ -26,6 +26,10 @@ function getToday() {
   return new Date().toDateString();
 }
 
+function getCurrentHour() {
+  return new Date().getHours();
+}
+
 function initializeDailyPassCounts() {
   chrome.storage.local.get(['passCounts', 'lastResetDate'], (result) => {
     const today = getToday();
@@ -36,25 +40,46 @@ function initializeDailyPassCounts() {
           '5': 0,
           '15': 0
         },
-        lastResetDate: today
+        lastResetDate: today,
+        hourlyPassUsage: Array(24).fill(0), // Initialize hourly tracking with zeros
+        hourlyPassTypeUsage: Array(24).fill({1: 0, 5: 0, 15: 0}) // Initialize hourly pass type tracking
       });
     }
   });
 }
 
 function incrementPassCount(duration) {
-  chrome.storage.local.get(['passCounts', 'lastResetDate'], (result) => {
+  chrome.storage.local.get(['passCounts', 'lastResetDate', 'hourlyPassUsage', 'hourlyPassTypeUsage'], (result) => {
     const today = getToday();
-    let { passCounts, lastResetDate } = result;
+    const currentHour = getCurrentHour();
+    let { passCounts, lastResetDate, hourlyPassUsage, hourlyPassTypeUsage } = result;
 
     if (lastResetDate !== today) {
       passCounts = { '1': 0, '5': 0, '15': 0 };
       lastResetDate = today;
+      hourlyPassUsage = Array(24).fill(0);
+      hourlyPassTypeUsage = Array(24).fill({1: 0, 5: 0, 15: 0});
+    }
+
+    // If hourlyPassUsage doesn't exist yet, initialize it
+    if (!hourlyPassUsage) {
+      hourlyPassUsage = Array(24).fill(0);
+    }
+    
+    // If hourlyPassTypeUsage doesn't exist yet, initialize it
+    if (!hourlyPassTypeUsage) {
+      hourlyPassTypeUsage = Array(24).fill({1: 0, 5: 0, 15: 0});
     }
 
     passCounts[duration] = (passCounts[duration] || 0) + 1;
+    hourlyPassUsage[currentHour] = (hourlyPassUsage[currentHour] || 0) + 1;
+    
+    // Update the pass type count for the current hour
+    const hourData = hourlyPassTypeUsage[currentHour] || {1: 0, 5: 0, 15: 0};
+    hourData[duration] = (hourData[duration] || 0) + 1;
+    hourlyPassTypeUsage[currentHour] = hourData;
 
-    chrome.storage.local.set({ passCounts, lastResetDate });
+    chrome.storage.local.set({ passCounts, lastResetDate, hourlyPassUsage, hourlyPassTypeUsage });
   });
 }
 
