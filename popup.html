@@ -1,27 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Focus Mode with Access Passes</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attention Rehab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
-  <div class="header">
-    <h1>Focus Mode</h1>
-    <div id="work-mode">
-      <label class="switch">
-        <input type="checkbox" id="work-mode-toggle">
-        <span class="slider round"></span>
-      </label>
+  <div class="popup-container">
+    <div class="header">
+      <div class="logo-container">
+        <div class="icon">🛡️</div>
+        <h1>Attention Rehab</h1>
+      </div>
+      <div class="work-mode-container">
+        <span class="mode-label">Work Mode</span>
+        <label class="switch">
+          <input type="checkbox" id="work-mode-toggle">
+          <span class="slider round"></span>
+        </label>
+      </div>
     </div>
-  </div>
-  
-  <div id="blocked-sites">
-    <h2>Blocked Sites</h2>
-    <div class="input-group">
-      <input type="text" id="new-site" placeholder="Add site to block">
-      <button id="add-site">Add</button>
+    
+    <div class="content-section">
+      <div id="blocked-sites">
+        <h2>Blocked Sites</h2>
+        <div class="input-group">
+          <input type="text" id="new-site" placeholder="e.g., twitter.com, youtube.com">
+          <button id="add-site" class="primary-button">Add</button>
+        </div>
+        <div class="site-list-container">
+          <ul id="site-list"></ul>
+          <div class="empty-state" id="empty-sites-message">
+            <p>No sites blocked yet. Add your first distraction above.</p>
+          </div>
+        </div>
+      </div>
     </div>
-    <ul id="site-list"></ul>
+    
+    <div class="footer">
+      <div class="tip-container">
+        <div class="tip-icon">💡</div>
+        <p class="tip-text">Block entire domains (e.g., twitter.com) or specific paths (e.g., youtube.com/shorts).</p>
+      </div>
+    </div>
   </div>
   
   <script src="popup.js"></script>
