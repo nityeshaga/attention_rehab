@@ -72,22 +72,69 @@ function getLast24HoursData(passData) {
     return result;
 }
 
+// Helper function to get data for the last 7 days
+function getLast7DaysData(passData) {
+    const result = [];
+    
+    // Get data for each of the last 7 days
+    for (let daysAgo = 6; daysAgo >= 0; daysAgo--) {
+        const dateString = getDateString(daysAgo);
+        const dayData = passData[dateString] || {};
+        
+        // Sum up all pass types for each day
+        let day1MinTotal = 0;
+        let day5MinTotal = 0;
+        let day15MinTotal = 0;
+        
+        for (let hour = 0; hour < 24; hour++) {
+            const hourData = dayData[hour] || { "1": 0, "5": 0, "15": 0 };
+            day1MinTotal += hourData["1"] || 0;
+            day5MinTotal += hourData["5"] || 0;
+            day15MinTotal += hourData["15"] || 0;
+        }
+        
+        // Add the daily totals to the result
+        result.push({
+            "1": day1MinTotal,
+            "5": day5MinTotal,
+            "15": day15MinTotal,
+            "date": dateString
+        });
+    }
+    
+    return result;
+}
+
+// Global variable to track current view mode
+let currentViewMode = '24h';
+
 function renderHourlyChart() {
     chrome.storage.local.get(['passData'], function(result) {
         const passData = result.passData || {};
-        const last24HoursData = getLast24HoursData(passData);
-        const chartContainer = document.getElementById('hourly-chart');
+        
+        // Get data based on current view mode
+        let chartData;
+        let isDaily = false;
+        
+        if (currentViewMode === '24h') {
+            chartData = getLast24HoursData(passData);
+        } else {
+            chartData = getLast7DaysData(passData);
+            isDaily = true;
+        }
         
         console.log(passData);
-        console.log("Last 24 hours data:", last24HoursData);
+        console.log("Chart data:", chartData);
+        
+        const chartContainer = document.getElementById('hourly-chart');
         
         // Clear previous chart if any
         chartContainer.innerHTML = '';
         
-        // Calculate the maximum total passes in any hour for scaling
+        // Calculate the maximum total passes for scaling
         let maxTotal = 1; // Default to 1 to avoid division by zero
-        last24HoursData.forEach(hourData => {
-            const total = (hourData["1"] || 0) + (hourData["5"] || 0) + (hourData["15"] || 0);
+        chartData.forEach(dataPoint => {
+            const total = (dataPoint["1"] || 0) + (dataPoint["5"] || 0) + (dataPoint["15"] || 0);
             if (total > maxTotal) maxTotal = total;
         });
         
@@ -110,35 +157,41 @@ function renderHourlyChart() {
             });
         }
         
-        // Get current hour and date for time calculations
+        // Get current date for time calculations
         const currentDate = new Date();
         
-        // Create bars for each hour - we want oldest hour on left, newest on right
-        // So we DON'T reverse the array here - it's already in the right order from getLast24HoursData
-        last24HoursData.forEach((hourData, index) => {
-            // Calculate which hour this represents
-            // For the hour label, we need to calculate the actual hour this bar represents
-            // index 0 is 24 hours ago, and the last index is the current hour
-            const hoursAgo = 24 - 1 - index;
-            const barDate = new Date(currentDate);
-            barDate.setHours(currentDate.getHours() - hoursAgo);
-            const barHour = barDate.getHours();
+        // Create bars for each data point
+        chartData.forEach((dataPoint, index) => {
+            let barLabel;
             
-            const pass1Count = hourData["1"] || 0;
-            const pass5Count = hourData["5"] || 0;
-            const pass15Count = hourData["15"] || 0;
+            if (isDaily) {
+                // For 7-day view, use date as label
+                const date = new Date(dataPoint.date);
+                barLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', '');
+            } else {
+                // For 24-hour view, calculate hour label
+                const hoursAgo = 24 - 1 - index;
+                const barDate = new Date(currentDate);
+                barDate.setHours(currentDate.getHours() - hoursAgo);
+                const barHour = barDate.getHours();
+                barLabel = barHour === 0 ? '12am' : barHour === 12 ? '12pm' : barHour > 12 ? `${barHour-12}pm` : `${barHour}am`;
+            }
+            
+            const pass1Count = dataPoint["1"] || 0;
+            const pass5Count = dataPoint["5"] || 0;
+            const pass15Count = dataPoint["15"] || 0;
             const totalPasses = pass1Count + pass5Count + pass15Count;
             
-            // Skip rendering if no passes for this hour
+            // Skip rendering if no passes for this period
             if (totalPasses === 0) {
                 const emptyBar = document.createElement('div');
                 emptyBar.className = 'chart-bar';
                 emptyBar.style.height = '1%'; // Minimal height for empty bars
                 
-                // Add hour label
+                // Add label
                 const label = document.createElement('div');
                 label.className = 'chart-bar-label';
-                label.textContent = barHour === 0 ? '12am' : barHour === 12 ? '12pm' : barHour > 12 ? `${barHour-12}pm` : `${barHour}am`;
+                label.textContent = barLabel;
                 
                 emptyBar.appendChild(label);
                 chartContainer.appendChild(emptyBar);
@@ -154,10 +207,10 @@ function renderHourlyChart() {
             bar.style.flexDirection = 'column-reverse'; // Stack from bottom
             bar.style.overflow = 'visible'; // Change from hidden to visible to ensure labels show
             
-            // Add hour label
+            // Add label
             const label = document.createElement('div');
             label.className = 'chart-bar-label';
-            label.textContent = barHour === 0 ? '12am' : barHour === 12 ? '12pm' : barHour > 12 ? `${barHour-12}pm` : `${barHour}am`;
+            label.textContent = barLabel;
             
             // Add count value that shows on hover
             const value = document.createElement('div');
@@ -218,6 +271,28 @@ document.addEventListener('DOMContentLoaded', () => {
     saveBlockedUrl();
     updatePassCounts();
     renderHourlyChart();
+
+    // Add event listeners for time range toggle buttons
+    const toggle24h = document.getElementById('toggle-24h');
+    const toggle7d = document.getElementById('toggle-7d');
+    
+    toggle24h.addEventListener('click', () => {
+        if (currentViewMode !== '24h') {
+            currentViewMode = '24h';
+            toggle24h.classList.add('active');
+            toggle7d.classList.remove('active');
+            renderHourlyChart();
+        }
+    });
+    
+    toggle7d.addEventListener('click', () => {
+        if (currentViewMode !== '7d') {
+            currentViewMode = '7d';
+            toggle7d.classList.add('active');
+            toggle24h.classList.remove('active');
+            renderHourlyChart();
+        }
+    });
 
     const passButtons = document.querySelectorAll('.pass-button');
     console.log('Found pass buttons:', passButtons.length);

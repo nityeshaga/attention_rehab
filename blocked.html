@@ -115,10 +115,10 @@
         /* Chart styling */
         .chart-container {
             margin-top: 60px;
-            max-width: 900px;
+            max-width: 1200px;
             width: 95%;
             min-height: 500px;
-            padding: 3rem;
+            padding: 4rem;
             margin-bottom: 70px;
         }
         
@@ -332,6 +332,38 @@
                 height: 150px;
             }
         }
+        
+        .chart-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .time-range-toggle {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .time-toggle-btn {
+            background-color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .time-toggle-btn:hover {
+            background-color: #f7f7f7;
+        }
+        
+        .time-toggle-btn.active {
+            background-color: #6366f1;
+            color: #fff;
+        }
     </style>
     <script src="blocked.js"></script>
 </head>
@@ -360,7 +392,12 @@
     <div class="container chart-container">
         <div class="chart-header">
             <h2>Your Distraction Patterns</h2>
-            <p>This chart shows how many times you've accessed blocked sites in the last 24 hours:</p>
+            <div class="chart-controls">
+                <div class="time-range-toggle">
+                    <button id="toggle-24h" class="time-toggle-btn active">Last 24 Hours</button>
+                    <button id="toggle-7d" class="time-toggle-btn">Last 7 Days</button>
+                </div>
+            </div>
         </div>
         <div id="hourly-chart"></div>
         <div class="chart-legend">
