@@ -1,3 +1,5 @@
+// Motivational messages are loaded from motivational-messages.js
+
 function saveBlockedUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     const blockedUrl = urlParams.get('from');
@@ -108,6 +110,152 @@ function getLast7DaysData(passData) {
 // Global variable to track current view mode
 let currentViewMode = '24h';
 
+// Function to generate motivational messages based on usage patterns
+function updateMotivationalMessage(passData) {
+    const messageElement = document.getElementById('motivational-message');
+    if (!messageElement) return;
+    
+    // Get data for analysis
+    const today = getToday();
+    const yesterday = getDateString(1);
+    const todayData = passData[today] || {};
+    const yesterdayData = passData[yesterday] || {};
+    
+    // Calculate total passes for today and yesterday
+    let todayTotal = 0, yesterdayTotal = 0;
+    
+    for (let hour = 0; hour < 24; hour++) {
+        const todayHourData = todayData[hour] || { "1": 0, "5": 0, "15": 0 };
+        const yesterdayHourData = yesterdayData[hour] || { "1": 0, "5": 0, "15": 0 };
+        
+        todayTotal += (todayHourData["1"] || 0) + (todayHourData["5"] || 0) + (todayHourData["15"] || 0);
+        yesterdayTotal += (yesterdayHourData["1"] || 0) + (yesterdayHourData["5"] || 0) + (yesterdayHourData["15"] || 0);
+    }
+    
+    // Get data for the last 7 days
+    const weekData = getLast7DaysData(passData);
+    
+    // Calculate weekly metrics
+    let weeklyTotal = 0;
+    let mostActiveDay = { date: '', total: 0 };
+    let leastActiveDay = { date: '', total: Number.MAX_SAFE_INTEGER };
+    
+    weekData.forEach(day => {
+        const dayTotal = day["1"] + day["5"] + day["15"];
+        weeklyTotal += dayTotal;
+        
+        if (dayTotal > mostActiveDay.total) {
+            mostActiveDay = { date: day.date, total: dayTotal };
+        }
+        
+        if (dayTotal < leastActiveDay.total && dayTotal > 0) {
+            leastActiveDay = { date: day.date, total: dayTotal };
+        }
+    });
+    
+    if (leastActiveDay.total === Number.MAX_SAFE_INTEGER) {
+        leastActiveDay.total = 0;
+    }
+    
+    // Calculate time spent on distractions (rough estimate)
+    const todayMinutes = (todayData ? calculateTotalMinutes(todayData) : 0);
+    const weeklyMinutes = calculateWeeklyMinutes(weekData);
+    const weeklyHours = Math.round(weeklyMinutes/60);
+    const monthlyHours = Math.round(weeklyHours * 4);
+    const yearlyHours = Math.round(365 * 15 / 60);
+    
+    // Determine usage trend
+    const trend = todayTotal < yesterdayTotal ? 'decreasing' : 
+                 todayTotal > yesterdayTotal ? 'increasing' : 'steady';
+    
+    // Generate appropriate message based on patterns
+    let message = '';
+    
+    // Process time insight messages to replace placeholders with actual values
+    const processedTimeInsights = motivationalMessages.timeInsight.map(msg => {
+        return msg.replace('{todayMinutes}', todayMinutes)
+                 .replace('{weeklyMinutes}', weeklyMinutes)
+                 .replace('{weeklyHours}', weeklyHours)
+                 .replace('{monthlyHours}', monthlyHours)
+                 .replace('{yearlyHours}', yearlyHours);
+    });
+    
+    // Select message based on usage patterns
+    if (todayTotal === 0) {
+        // No distractions today
+        message = "Perfect focus today. Whatever you're doing, it's working.";
+    } else if (todayTotal <= 2) {
+        // Very low usage
+        message = motivationalMessages.lowUsage[Math.floor(Math.random() * motivationalMessages.lowUsage.length)];
+    } else if (todayTotal >= 10) {
+        // High usage
+        message = motivationalMessages.highUsage[Math.floor(Math.random() * motivationalMessages.highUsage.length)];
+    } else if (weeklyTotal > 0 && Math.random() < 0.3) {
+        // Sometimes show time insights
+        message = processedTimeInsights[Math.floor(Math.random() * processedTimeInsights.length)];
+    } else {
+        // Show trend-based messages
+        message = motivationalMessages[trend][Math.floor(Math.random() * motivationalMessages[trend].length)];
+    }
+    
+    // Add styling to the message with a subtle italic emphasis on key phrases
+    message = styleMessage(message);
+    
+    // Update the message element with a fade effect
+    messageElement.style.opacity = 0;
+    setTimeout(() => {
+        messageElement.innerHTML = message;
+        messageElement.style.opacity = 1;
+    }, 300);
+}
+
+// Helper function to add subtle styling to the motivational message
+function styleMessage(message) {
+    // Add italic emphasis to certain key phrases
+    const emphasisPhrases = [
+        'focus', 'attention', 'progress', 'mindful', 'intention', 'awareness',
+        'small steps', 'habits', 'patterns', 'deep work', 'quality', 'time',
+        'momentum', 'consistency', 'change', 'improvement'
+    ];
+    
+    let styledMessage = message;
+    
+    // Apply styling to emphasis phrases
+    emphasisPhrases.forEach(phrase => {
+        const regex = new RegExp(`\\b${phrase}\\b`, 'gi');
+        styledMessage = styledMessage.replace(regex, match => `<em>${match}</em>`);
+    });
+    
+    return styledMessage;
+}
+
+// Helper function to calculate total minutes spent on distractions for a day
+function calculateTotalMinutes(dayData) {
+    let totalMinutes = 0;
+    
+    for (let hour = 0; hour < 24; hour++) {
+        const hourData = dayData[hour] || { "1": 0, "5": 0, "15": 0 };
+        totalMinutes += (hourData["1"] || 0) * 1;
+        totalMinutes += (hourData["5"] || 0) * 5;
+        totalMinutes += (hourData["15"] || 0) * 15;
+    }
+    
+    return totalMinutes;
+}
+
+// Helper function to calculate weekly minutes
+function calculateWeeklyMinutes(weekData) {
+    let totalMinutes = 0;
+    
+    weekData.forEach(day => {
+        totalMinutes += (day["1"] || 0) * 1;
+        totalMinutes += (day["5"] || 0) * 5;
+        totalMinutes += (day["15"] || 0) * 15;
+    });
+    
+    return totalMinutes;
+}
+
 function renderHourlyChart() {
     chrome.storage.local.get(['passData'], function(result) {
         const passData = result.passData || {};
@@ -125,6 +273,9 @@ function renderHourlyChart() {
         
         console.log(passData);
         console.log("Chart data:", chartData);
+        
+        // Update the motivational message based on usage patterns
+        updateMotivationalMessage(passData);
         
         const chartContainer = document.getElementById('hourly-chart');
         
