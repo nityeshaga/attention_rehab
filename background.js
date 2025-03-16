@@ -21,84 +21,96 @@ function shouldBlockUrl(url, blockedSites) {
   });
 }
 
-// New code for pass tracking
+// New code for pass tracking with date-based storage
 function getToday() {
-  return new Date().toDateString();
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 function getCurrentHour() {
   return new Date().getHours();
 }
 
-function initializeDailyPassCounts() {
-  chrome.storage.local.get(['passCounts', 'lastResetDate'], (result) => {
-    const today = getToday();
-    if (result.lastResetDate !== today) {
+function initializePassData() {
+  chrome.storage.local.get(['passData'], (result) => {
+    if (!result.passData) {
       chrome.storage.local.set({
-        passCounts: {
-          '1': 0,
-          '5': 0,
-          '15': 0
-        },
-        lastResetDate: today,
-        hourlyPassUsage: Array(24).fill(0), // Initialize hourly tracking with zeros
-        hourlyPassTypeUsage: Array(24).fill({1: 0, 5: 0, 15: 0}) // Initialize hourly pass type tracking
+        passData: {}
       });
+    }
+    
+    // Initialize today's data if it doesn't exist
+    ensureTodayDataExists();
+  });
+}
+
+function ensureTodayDataExists() {
+  const today = getToday();
+  chrome.storage.local.get(['passData'], (result) => {
+    const passData = result.passData || {};
+    
+    if (!passData[today]) {
+      // Initialize today with empty hour data
+      const todayData = {};
+      for (let i = 0; i < 24; i++) {
+        todayData[i] = { "1": 0, "5": 0, "15": 0 };
+      }
+      
+      passData[today] = todayData;
+      chrome.storage.local.set({ passData });
     }
   });
 }
 
 function incrementPassCount(duration) {
-  chrome.storage.local.get(['passCounts', 'lastResetDate', 'hourlyPassUsage', 'hourlyPassTypeUsage'], (result) => {
-    const today = getToday();
-    const currentHour = getCurrentHour();
-    let { passCounts, lastResetDate, hourlyPassUsage, hourlyPassTypeUsage } = result;
-
-    if (lastResetDate !== today) {
-      passCounts = { '1': 0, '5': 0, '15': 0 };
-      lastResetDate = today;
-      hourlyPassUsage = Array(24).fill(0);
-      hourlyPassTypeUsage = Array(24).fill({1: 0, 5: 0, 15: 0});
-    }
-
-    // If hourlyPassUsage doesn't exist yet, initialize it
-    if (!hourlyPassUsage) {
-      hourlyPassUsage = Array(24).fill(0);
+  const today = getToday();
+  const currentHour = getCurrentHour();
+  
+  chrome.storage.local.get(['passData'], (result) => {
+    const passData = result.passData || {};
+    
+    // Ensure today's data exists
+    if (!passData[today]) {
+      passData[today] = {};
+      for (let i = 0; i < 24; i++) {
+        passData[today][i] = { "1": 0, "5": 0, "15": 0 };
+      }
     }
     
-    // If hourlyPassTypeUsage doesn't exist yet, initialize it
-    if (!hourlyPassTypeUsage) {
-      hourlyPassTypeUsage = Array(24).fill({1: 0, 5: 0, 15: 0});
+    // Ensure current hour data exists
+    if (!passData[today][currentHour]) {
+      passData[today][currentHour] = { "1": 0, "5": 0, "15": 0 };
     }
-
-    passCounts[duration] = (passCounts[duration] || 0) + 1;
-    hourlyPassUsage[currentHour] = (hourlyPassUsage[currentHour] || 0) + 1;
     
-    // Update the pass type count for the current hour
-    const hourData = hourlyPassTypeUsage[currentHour] || {1: 0, 5: 0, 15: 0};
-    hourData[duration] = (hourData[duration] || 0) + 1;
-    hourlyPassTypeUsage[currentHour] = hourData;
-
-    chrome.storage.local.set({ passCounts, lastResetDate, hourlyPassUsage, hourlyPassTypeUsage });
+    // Increment the pass count for the current hour
+    passData[today][currentHour][duration] = (passData[today][currentHour][duration] || 0) + 1;
+    
+    // Store the updated data
+    chrome.storage.local.set({ passData });
   });
 }
 
-// Initialize pass counts on extension start
+// Initialize on extension load
 chrome.runtime.onInstalled.addListener(() => {
-  initializeDailyPassCounts();
+  initializePassData();
 });
 
-// Reset pass counts daily
-chrome.alarms.create('resetPassCounts', { periodInMinutes: 1440 }); // 24 hours
+// Also initialize when the background script loads
+initializePassData();
+
+// Check daily to ensure we have the current day's data structure
+chrome.alarms.create('ensureTodayData', { periodInMinutes: 60 }); // Check hourly
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'resetPassCounts') {
-    initializeDailyPassCounts();
+  if (alarm.name === 'ensureTodayData') {
+    ensureTodayDataExists();
   }
 });
 
 // Initialize alarms when the extension starts
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.clearAll();
+  // Create our alarms
+  chrome.alarms.create('ensureTodayData', { periodInMinutes: 60 }); // Check hourly
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -125,7 +137,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       
       console.log(`Alarm set for ${request.duration} minutes from now`);
 
-      // Increment pass count
+      // Increment pass count using our new data structure
       incrementPassCount(request.duration);
 
       // Grant the pass immediately and redirect
@@ -155,13 +167,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
           });
         } else {
-          console.error('No blocked URL found');
+          console.error('No blocked URL found in storage');
           sendResponse({granted: false, error: 'No blocked URL found'});
         }
       });
     });
     
-    return true; // for asynchronous response
+    return true; // Required to use sendResponse asynchronously
   }
   
   else if (request.action === 'redirect') {

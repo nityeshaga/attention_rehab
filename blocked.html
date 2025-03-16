@@ -160,7 +160,7 @@
             border-radius: 4px 4px 0 0;
             position: relative;
             min-height: 1px;
-            transition: all 0.3s ease;
+            transition: all 0.15s ease;
             z-index: 1;
         }
 
@@ -358,8 +358,10 @@
     
     <!-- New section for the hourly usage chart -->
     <div class="container chart-container">
-        <h2>Your Distraction Patterns</h2>
-        <p>This chart shows how many times you've accessed blocked sites in the last 24 hours:</p>
+        <div class="chart-header">
+            <h2>Your Distraction Patterns</h2>
+            <p>This chart shows how many times you've accessed blocked sites in the last 24 hours:</p>
+        </div>
         <div id="hourly-chart"></div>
         <div class="chart-legend">
             <div class="legend-item">
