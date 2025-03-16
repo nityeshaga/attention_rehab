@@ -51,7 +51,6 @@ motivationalMessages = {
     // Messages for days with high distraction usage
     highUsage: [
         "Every interruption costs more time than just the break itself. What's one change you could make tomorrow?",
-        "Consider batching similar distractions into scheduled breaks rather than spreading them throughout your day.",
         "What if you set a specific intention before opening each new tab?",
         "The difference between good and great often comes down to sustained attention.",
         "Try the 5-minute rule: when you feel the urge to check something, wait 5 minutes first.",
