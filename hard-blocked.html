@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Hard Blocked</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="hard-blocked.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #fef2f2, #fdf2f8);
+            color: #333;
+            margin: 0;
+            padding: 80px 0 20px 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            text-align: center;
+            line-height: 1.6;
+            box-sizing: border-box;
+            overflow-y: auto;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23dc2626' fill-opacity='0.08' fill-rule='evenodd'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.15);
+            max-width: 900px;
+            width: 95%;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(220, 38, 38, 0.1);
+        }
+        
+        .container:hover {
+            box-shadow: 0 15px 35px rgba(220, 38, 38, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.4rem;
+            margin-bottom: 1rem;
+            color: #dc2626;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        h2 {
+            font-size: 1.4rem;
+            color: #991b1b;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        
+        p {
+            color: #4a5568;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: #dc2626;
+            display: inline-block;
+        }
+        
+        .message-box {
+            background: linear-gradient(135deg, #fef2f2, #fdf2f8);
+            border: 2px solid #fecaca;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .warning-text {
+            font-size: 1.2rem;
+            color: #991b1b;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .uninstall-text {
+            font-size: 1rem;
+            color: #6b7280;
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #dc2626;
+            margin: 1.5rem 0;
+        }
+        
+        .motivational-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(220, 38, 38, 0.05);
+            border-radius: 12px;
+        }
+        
+        .motivational-text {
+            font-size: 1rem;
+            color: #374151;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+        
+        .focus-tips {
+            text-align: left;
+            margin: 1.5rem 0;
+        }
+        
+        .focus-tips h3 {
+            color: #dc2626;
+            font-size: 1.1rem;
+            margin-bottom: 0.8rem;
+            text-align: center;
+        }
+        
+        .focus-tips ul {
+            color: #6b7280;
+            padding-left: 1.5rem;
+        }
+        
+        .focus-tips li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            font-style: italic;
+            padding: 15px 0;
+            background-color: rgba(254, 242, 242, 0.9);
+            border-top: 1px solid rgba(220, 38, 38, 0.1);
+            z-index: 10;
+        }
+
+        .footer a {
+            color: #dc2626;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            color: #991b1b;
+            text-decoration: underline;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .container {
+                padding: 2rem;
+                width: 85%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .message-box {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🔒</div>
+        <h1>Hard Block Mode: ACTIVATED</h1>
+        <p><strong>Look at you, making the hard choices. Respect. 🫡</strong></p>
+        
+        <div class="message-box">
+            <div class="warning-text" id="countdown-display">Loading your pattern-breaking countdown... 💪</div>
+            <p>You put this site in Hard Block because you're tired of being that person who says "just 5 minutes" and then emerges 2 hours later wondering where your life went.</p>
+            
+            <p><strong>Smart move.</strong> This is you choosing your future self over your current craving. That's elite-level self-awareness right there.</p>
+            
+            <div class="uninstall-text">
+                <strong>The only escape hatch? Completely nuking this extension.</strong>
+                <br><br>
+                <em>Chrome → Settings → Extensions → Attention Rehab → Remove</em>
+                <br><br>
+                <div style="font-style: italic; color: #6b7280; margin-top: 0.5rem;">
+                    (But we both know you're not gonna do that. You're stronger than the craving. 💯)
+                </div>
+            </div>
+        </div>
+        
+        <div class="motivational-section">
+            <div class="motivational-text">
+                "You're literally rewiring your brain right now. Every 'no' to this site is a 'yes' to your goals."
+            </div>
+            
+            <div class="focus-tips">
+                <h3>Your brain wants dopamine? Give it the good stuff:</h3>
+                <ul>
+                    <li>🚶‍♂️ Take a lap around the block (fresh air hits different)</li>
+                    <li>🫁 Do the 4-7-8 breathing thing (it actually works)</li>
+                    <li>💧 Hydrate like you're a plant that just remembered it's alive</li>
+                    <li>📝 Knock out one thing from your actual to-do list</li>
+                    <li>🧠 Journal why you're avoiding the real work (brutal but effective)</li>
+                    <li>🎯 Remember why you started this focus journey in the first place</li>
+                </ul>
+            </div>
+            
+            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(34, 197, 94, 0.1); border-left: 4px solid #22c55e; border-radius: 8px;">
+                <strong style="color: #16a34a;">The 1% Club:</strong> 99% of people will cave to the urge. But you? You built yourself a digital fortress. You're literally in the top 1% of humans who take their attention seriously. 🏆
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        Built for professionals by <a href="https://beginnermaps.com" target="_blank">Beginner Maps</a>
+    </div>
+
+</body>
+</html>

@@ -5,7 +5,10 @@ let activePassTimers = {};
 
 function shouldBlockUrl(url, blockedSites) {
   const urlObj = new URL(url);
-  return blockedSites.some(blockedSite => {
+  return blockedSites.find(blockedSiteObj => {
+    // Handle both old array format (string) and new object format
+    const blockedSite = typeof blockedSiteObj === 'string' ? blockedSiteObj : blockedSiteObj.site;
+    
     // Remove protocol and www. if present
     const cleanBlockedSite = blockedSite.replace(/^(https?:\/\/)?(www\.)?/, '');
     const cleanUrlHostname = urlObj.hostname.replace(/^www\./, '');
@@ -90,19 +93,88 @@ function incrementPassCount(duration) {
   });
 }
 
+// Migration function to convert old blockedSites array format to new object format
+function migrateBlockedSitesData() {
+  chrome.storage.sync.get(['blockedSites'], function(data) {
+    if (data.blockedSites && Array.isArray(data.blockedSites)) {
+      // Check if it's the old format (array of strings) or missing expiry field
+      const needsMigration = data.blockedSites.some(site => 
+        typeof site === 'string' || (typeof site === 'object' && site.hardBlockExpiry === undefined)
+      );
+      
+      if (needsMigration) {
+        console.log('Migrating blocked sites data to new format...');
+        const migratedSites = data.blockedSites.map(site => {
+          if (typeof site === 'string') {
+            return { site: site, hardBlock: false, hardBlockExpiry: null };
+          } else if (site.hardBlockExpiry === undefined) {
+            // Add expiry field to existing objects
+            return { 
+              site: site.site, 
+              hardBlock: site.hardBlock || false, 
+              hardBlockExpiry: site.hardBlock ? (Date.now() + (7 * 24 * 60 * 60 * 1000)) : null 
+            };
+          }
+          return site; // Already in new format
+        });
+        
+        chrome.storage.sync.set({ blockedSites: migratedSites }, function() {
+          console.log('Blocked sites data migration completed');
+        });
+      }
+    }
+  });
+}
+
+// Function to check and clean up expired hard blocks
+function cleanupExpiredHardBlocks() {
+  chrome.storage.sync.get(['blockedSites'], function(data) {
+    if (data.blockedSites && Array.isArray(data.blockedSites)) {
+      const now = Date.now();
+      let hasChanges = false;
+      
+      const updatedSites = data.blockedSites.map(site => {
+        if (typeof site === 'object' && site.hardBlock && site.hardBlockExpiry && now > site.hardBlockExpiry) {
+          console.log(`Hard block expired for ${site.site}`);
+          hasChanges = true;
+          return { 
+            site: site.site, 
+            hardBlock: false, 
+            hardBlockExpiry: null 
+          };
+        }
+        return site;
+      });
+      
+      if (hasChanges) {
+        chrome.storage.sync.set({ blockedSites: updatedSites }, function() {
+          console.log('Expired hard blocks cleaned up');
+        });
+      }
+    }
+  });
+}
+
 // Initialize on extension load
 chrome.runtime.onInstalled.addListener(() => {
   initializePassData();
+  migrateBlockedSitesData();
+  cleanupExpiredHardBlocks();
 });
 
 // Also initialize when the background script loads
 initializePassData();
+migrateBlockedSitesData();
+cleanupExpiredHardBlocks();
 
-// Check daily to ensure we have the current day's data structure
+// Check daily to ensure we have the current day's data structure and cleanup expired hard blocks
 chrome.alarms.create('ensureTodayData', { periodInMinutes: 60 }); // Check hourly
+chrome.alarms.create('cleanupHardBlocks', { periodInMinutes: 60 }); // Check hourly
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'ensureTodayData') {
     ensureTodayDataExists();
+  } else if (alarm.name === 'cleanupHardBlocks') {
+    cleanupExpiredHardBlocks();
   }
 });
 
@@ -207,11 +279,21 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     chrome.alarms.get(`expirePass_${tabId}`, (alarm) => {
       if (!alarm) {
         chrome.storage.sync.get(['blockedSites', 'workMode'], function(data) {
-          if (data.workMode && data.blockedSites && shouldBlockUrl(tab.url, data.blockedSites)) {
-            chrome.storage.local.set({blockedUrl: tab.url}, function() {
-              console.log('Blocked URL saved:', tab.url);
-            });
-            chrome.tabs.update(tabId, {url: chrome.runtime.getURL(`blocked.html?from=${encodeURIComponent(tab.url)}`)});
+          if (data.workMode && data.blockedSites) {
+            const matchedSite = shouldBlockUrl(tab.url, data.blockedSites);
+            if (matchedSite) {
+              chrome.storage.local.set({blockedUrl: tab.url}, function() {
+                console.log('Blocked URL saved:', tab.url);
+              });
+              
+              // Check if it's a hard block
+              const isHardBlock = matchedSite.hardBlock === true;
+              const blockPage = isHardBlock ? 'hard-blocked.html' : 'blocked.html';
+              
+              chrome.tabs.update(tabId, {
+                url: chrome.runtime.getURL(`${blockPage}?from=${encodeURIComponent(tab.url)}`)
+              });
+            }
           }
         });
       }

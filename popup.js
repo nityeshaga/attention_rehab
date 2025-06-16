@@ -9,7 +9,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load blocked sites
   chrome.storage.sync.get(['blockedSites', 'workMode'], function(data) {
     if (data.blockedSites && data.blockedSites.length > 0) {
-      data.blockedSites.forEach(site => addSiteToList(site));
+      data.blockedSites.forEach(siteData => {
+        // Handle both old format (string) and new format (object)
+        if (typeof siteData === 'string') {
+          addSiteToList(siteData, false, null);
+        } else {
+          addSiteToList(siteData.site, siteData.hardBlock || false, siteData.hardBlockExpiry || null);
+        }
+      });
       emptyStateMessage.style.display = 'none';
     } else {
       emptyStateMessage.style.display = 'block';
@@ -75,15 +82,21 @@ document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.sync.get('blockedSites', function(data) {
       const blockedSites = data.blockedSites || [];
 
-      // Check for duplicates
-      if (blockedSites.some(existingSite => existingSite.toLowerCase() === site.toLowerCase())) {
+      // Check for duplicates (handle both old and new format)
+      const isDuplicate = blockedSites.some(existingSite => {
+        const existingSiteName = typeof existingSite === 'string' ? existingSite : existingSite.site;
+        return existingSiteName.toLowerCase() === site.toLowerCase();
+      });
+      
+      if (isDuplicate) {
         showInputError('This site is already blocked');
         return;
       }
 
-      blockedSites.push(site);
+      // Add in new object format
+      blockedSites.push({ site: site, hardBlock: false, hardBlockExpiry: null });
       chrome.storage.sync.set({blockedSites: blockedSites}, function() {
-        addSiteToList(site);
+        addSiteToList(site, false, null);
         newSiteInput.value = '';
         emptyStateMessage.style.display = 'none';
       });
@@ -100,33 +113,184 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 2000);
   }
 
-  function addSiteToList(site) {
+  // Helper functions for 7-day lockout
+  function isInLockout(hardBlockExpiry) {
+    return hardBlockExpiry && Date.now() < hardBlockExpiry;
+  }
+
+  function getRemainingDays(hardBlockExpiry) {
+    if (!hardBlockExpiry) return 0;
+    const remainingMs = hardBlockExpiry - Date.now();
+    return Math.ceil(remainingMs / (1000 * 60 * 60 * 24));
+  }
+
+  function showHardBlockConfirmation(site, checkbox) {
+    const confirmed = confirm(
+      `⚠️ HARD BLOCK WARNING ⚠️\n\n` +
+      `You are about to enable Hard Block for "${site}".\n\n` +
+      `This means:\n` +
+      `• The site will be COMPLETELY INACCESSIBLE for 7 DAYS\n` +
+      `• NO access passes will be available\n` +
+      `• The ONLY way to access this site will be to uninstall the entire extension\n` +
+      `• You CANNOT undo this for 7 days\n\n` +
+      `Are you absolutely sure you want to proceed?\n\n` +
+      `This is designed to help you break harmful browsing patterns.`
+    );
+    
+    if (confirmed) {
+      toggleHardBlock(site, true);
+    } else {
+      // Reset the checkbox if user cancelled
+      checkbox.checked = false;
+    }
+  }
+
+  function addSiteToList(site, isHardBlock = false, hardBlockExpiry = null) {
     const li = document.createElement('li');
+    if (isHardBlock) {
+      li.classList.add('hard-block');
+    }
+
+    // Site info container
+    const siteInfo = document.createElement('div');
+    siteInfo.className = 'site-info';
 
     const siteNameSpan = document.createElement('span');
     siteNameSpan.textContent = site;
-    siteNameSpan.className = 'site-name';
-    li.appendChild(siteNameSpan);
+    siteNameSpan.className = isHardBlock ? 'site-name hard-block' : 'site-name';
+    siteInfo.appendChild(siteNameSpan);
 
+    // Add hard block indicator icon
+    if (isHardBlock) {
+      const indicator = document.createElement('span');
+      indicator.textContent = '🚫';
+      indicator.className = 'hard-block-indicator';
+      indicator.title = 'Hard Block - No access passes available';
+      siteInfo.appendChild(indicator);
+    }
+
+    li.appendChild(siteInfo);
+
+    // Controls container
+    const controlsDiv = document.createElement('div');
+    controlsDiv.className = 'site-controls';
+
+    // Hard block toggle
+    const hardBlockContainer = document.createElement('div');
+    hardBlockContainer.className = 'hard-block-toggle-container';
+
+    const hardBlockLabel = document.createElement('div');
+    hardBlockLabel.className = 'hard-block-label';
+    hardBlockLabel.textContent = 'Hard';
+
+    const hardBlockSwitch = document.createElement('label');
+    hardBlockSwitch.className = 'hard-block-switch';
+
+    const hardBlockInput = document.createElement('input');
+    hardBlockInput.type = 'checkbox';
+    hardBlockInput.checked = isHardBlock;
+    
+    // Check if in lockout period
+    const inLockout = isInLockout(hardBlockExpiry);
+    const remainingDays = getRemainingDays(hardBlockExpiry);
+    
+    if (inLockout) {
+      hardBlockInput.disabled = true;
+      hardBlockLabel.textContent = `${remainingDays}d`;
+      hardBlockLabel.title = `Hard block active for ${remainingDays} more days`;
+      hardBlockLabel.style.color = '#dc2626';
+      hardBlockLabel.style.fontSize = '9px';
+    }
+    
+    hardBlockInput.addEventListener('change', function() {
+      if (this.checked) {
+        showHardBlockConfirmation(site, this);
+      } else {
+        toggleHardBlock(site, false);
+      }
+    });
+
+    const hardBlockSlider = document.createElement('span');
+    hardBlockSlider.className = 'hard-block-slider';
+
+    hardBlockSwitch.appendChild(hardBlockInput);
+    hardBlockSwitch.appendChild(hardBlockSlider);
+    hardBlockContainer.appendChild(hardBlockLabel);
+    hardBlockContainer.appendChild(hardBlockSwitch);
+
+    // Remove button
     const removeBtn = document.createElement('button');
     removeBtn.textContent = 'Remove';
     removeBtn.className = 'remove-button';
-
     removeBtn.addEventListener('click', function() {
-      chrome.storage.sync.get('blockedSites', function(data) {
-        const blockedSites = data.blockedSites.filter(s => s !== site);
-        chrome.storage.sync.set({blockedSites: blockedSites}, function() {
-          li.remove();
-
-          // Show empty state if no sites left
-          if (blockedSites.length === 0) {
-            emptyStateMessage.style.display = 'block';
-          }
-        });
-      });
+      removeSite(site, li);
     });
 
-    li.appendChild(removeBtn);
+    controlsDiv.appendChild(hardBlockContainer);
+    controlsDiv.appendChild(removeBtn);
+    li.appendChild(controlsDiv);
     siteList.appendChild(li);
+  }
+
+  function toggleHardBlock(site, isHardBlock) {
+    chrome.storage.sync.get('blockedSites', function(data) {
+      const blockedSites = data.blockedSites || [];
+      
+      // Find and update the site
+      const updatedSites = blockedSites.map(siteData => {
+        const siteName = typeof siteData === 'string' ? siteData : siteData.site;
+        if (siteName === site) {
+          const expiry = isHardBlock ? (Date.now() + (7 * 24 * 60 * 60 * 1000)) : null;
+          return { site: site, hardBlock: isHardBlock, hardBlockExpiry: expiry };
+        }
+        return typeof siteData === 'string' ? 
+          { site: siteData, hardBlock: false, hardBlockExpiry: null } : 
+          siteData;
+      });
+
+      chrome.storage.sync.set({blockedSites: updatedSites}, function() {
+        // Refresh the site list to update visual indicators
+        refreshSiteList();
+      });
+    });
+  }
+
+  function removeSite(site, li) {
+    chrome.storage.sync.get('blockedSites', function(data) {
+      const blockedSites = data.blockedSites.filter(siteData => {
+        const siteName = typeof siteData === 'string' ? siteData : siteData.site;
+        return siteName !== site;
+      });
+      
+      chrome.storage.sync.set({blockedSites: blockedSites}, function() {
+        li.remove();
+
+        // Show empty state if no sites left
+        if (blockedSites.length === 0) {
+          emptyStateMessage.style.display = 'block';
+        }
+      });
+    });
+  }
+
+  function refreshSiteList() {
+    // Clear current list
+    siteList.innerHTML = '';
+    
+    // Reload sites
+    chrome.storage.sync.get(['blockedSites'], function(data) {
+      if (data.blockedSites && data.blockedSites.length > 0) {
+        data.blockedSites.forEach(siteData => {
+          if (typeof siteData === 'string') {
+            addSiteToList(siteData, false, null);
+          } else {
+            addSiteToList(siteData.site, siteData.hardBlock || false, siteData.hardBlockExpiry || null);
+          }
+        });
+        emptyStateMessage.style.display = 'none';
+      } else {
+        emptyStateMessage.style.display = 'block';
+      }
+    });
   }
 });
