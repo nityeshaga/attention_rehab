@@ -278,8 +278,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'loading' && tab.url) {
     chrome.alarms.get(`expirePass_${tabId}`, (alarm) => {
       if (!alarm) {
-        chrome.storage.sync.get(['blockedSites', 'workMode'], function(data) {
-          if (data.workMode && data.blockedSites) {
+        chrome.storage.sync.get(['blockedSites'], function(data) {
+          if (data.blockedSites) {
             const matchedSite = shouldBlockUrl(tab.url, data.blockedSites);
             if (matchedSite) {
               chrome.storage.local.set({blockedUrl: tab.url}, function() {

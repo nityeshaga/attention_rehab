@@ -2,12 +2,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const newSiteInput = document.getElementById('new-site');
   const addSiteButton = document.getElementById('add-site');
   const siteList = document.getElementById('site-list');
-  const workModeToggle = document.getElementById('work-mode-toggle');
   const emptyStateMessage = document.getElementById('empty-sites-message');
   const passBtns = document.querySelectorAll('#access-passes button');
 
   // Load blocked sites
-  chrome.storage.sync.get(['blockedSites', 'workMode'], function(data) {
+  chrome.storage.sync.get(['blockedSites'], function(data) {
     if (data.blockedSites && data.blockedSites.length > 0) {
       data.blockedSites.forEach(siteData => {
         // Handle both old format (string) and new format (object)
@@ -21,7 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       emptyStateMessage.style.display = 'block';
     }
-    workModeToggle.checked = data.workMode || false;
   });
 
   // Add new site
@@ -34,22 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Toggle work mode
-  workModeToggle.addEventListener('change', function() {
-    chrome.storage.sync.set({workMode: this.checked});
-
-    // Visual feedback for toggle
-    const label = document.querySelector('.mode-label');
-    if (this.checked) {
-      label.textContent = 'Work Mode: On';
-      label.style.color = 'var(--primary-color)';
-      label.style.fontWeight = '600';
-    } else {
-      label.textContent = 'Work Mode';
-      label.style.color = 'var(--text-secondary)';
-      label.style.fontWeight = '500';
-    }
-  });
 
   // Request access pass
   passBtns.forEach(btn => {

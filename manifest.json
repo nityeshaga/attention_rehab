@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Attention Rehab",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "description": "Block distracting websites with timed access passes",
     "permissions": ["storage", "tabs", "alarms", "scripting"],
     "host_permissions": [
