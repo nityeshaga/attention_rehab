@@ -54,7 +54,8 @@ The risk of annoyance lives in *live* drift-nudging, so the judge starts **offli
 
 1. **Phase 1 — Surface-level blocking, draft guard, sentence-pass, trail log.** Path/DOM rules for X + YouTube; non-destructive enforcement (no more lost drafts); pass request = a sentence, parsed by a small model into a scoped pass (graceful keyword-based fallback when no API key is configured); silent URL-trail logging during every pass.
 2. **Phase 2 — Escalation + spiral interrupt + receipts.** Per-hour escalating pass friction; real-time binge detection with the receipts screen (fed by trail log); trail-based weekly receipts on the block page.
-3. **Phase 3 — Live judge.** Intent-vs-behavior matching in real time, adaptive tightening (learns *your* spiral signature — time of day, entry point, pass cadence). Gated on offline accuracy.
+3. **Phase 2.5 — Hard block rebuilt** (spec in [issue #2](https://github.com/nityeshaga/attention_rehab/issues/2)): surface-level locks, natural-boundary durations, 24h-delay unlock, offered at the moment of failure (spiral screen / level-3 wait), and trail-proposed quiet hours. Principle: flexible going in, rigid once inside.
+4. **Phase 3 — Live judge.** Intent-vs-behavior matching in real time, adaptive tightening (learns *your* spiral signature — time of day, entry point, pass cadence). Gated on offline accuracy.
 
 ## Phase 1 — SHIPPED (2026-07-14)
 
