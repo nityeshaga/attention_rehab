@@ -96,7 +96,7 @@ function maybeTriggerSpiral() {
 
 // ---- the pass office -------------------------------------------------------
 function parseDurationFallback(text) {
-  var m = String(text).match(/(\d+)\s*(?:min|minute|minutes|m)\b/i);
+  var m = String(text).match(/(\d+)\s*(?:minutes?|mins?|m)\b/i);
   var n = m ? parseInt(m[1], 10) : 5;
   if (isNaN(n) || n < 1) n = 5;
   return Math.min(30, n);
@@ -116,7 +116,7 @@ function buildPrompt(intent, platform, pathname) {
     '{"durationMinutes":<int 1-30>,"scopeSurfaces":["<path-pattern>",...],"label":"<<=8 word restatement>"}',
     '',
     'Rules:',
-    '- durationMinutes: infer from intent; a quick lookup 2-3, some research 8-12, a break 15-25; default 8; clamp 1-30.',
+    '- durationMinutes: if they name an explicit duration, use exactly that (clamped 1-30). Otherwise infer: a quick lookup 2-3, some research 8-12, a break 15-25; default 8.',
     '- scopeSurfaces: glob path-patterns, * = wildcard (e.g. "/home", "/search*", "/*/status/*") the intent legitimately needs. Always include the current path. Keep it tight.',
     '- label: short restatement of what they are here for.'
   ].join('\n');
