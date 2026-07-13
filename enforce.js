@@ -531,7 +531,25 @@
 
       var hard = !!site.hardBlock && (!site.hardBlockExpiry || Date.now() < site.hardBlockExpiry);
 
-      if (!cls.blocked && !hard) { fullClear(); return; }
+      if (!cls.blocked && !hard) {
+        // Allowed surface — no enforcement, but an active pass keeps its
+        // countdown pill visible everywhere on the domain (a pacing cue while
+        // composing/searching) and keeps the trail heartbeat going. Expiry
+        // here never blocks anything: this surface needs no pass.
+        var allPasses = local.activePasses || {};
+        var openPass = allPasses[cls.base];
+        if (openPass && Date.now() < openPass.endTs) {
+          clearOverlay();
+          restoreFeed();
+          hideBanner();
+          showPill(openPass);
+          startHeartbeat(openPass);
+          schedulePassExpiry(openPass.endTs);
+        } else {
+          fullClear();
+        }
+        return;
+      }
 
       if (hard) {
         stopHeartbeat();
