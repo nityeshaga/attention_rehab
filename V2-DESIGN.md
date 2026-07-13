@@ -44,7 +44,7 @@ The insight that **full blocking fails** — passes-with-friction is right, only
 
 ## The AI pass office — sequencing decision (Nityesh, 2026-07-14)
 
-Most of "watching" is deterministic: the background worker sees every navigation, the content script reports dwell/scroll. AI is needed at exactly two moments: (1) parsing a sentence like "10 min to find that Rails thread" into a scope (on-task surfaces + budget) — one cheap Haiku call; (2) phrasing callouts/summaries. Everything between is an `if` statement.
+Most of "watching" is deterministic: the background worker sees every navigation, the content script reports dwell/scroll. AI is needed at exactly two moments: (1) parsing a sentence like "10 min to find that Rails thread" into a scope (on-task surfaces + budget) — one cheap model call (deepseek-v4-flash via OpenRouter); (2) phrasing callouts/summaries. Everything between is an `if` statement.
 
 The risk of annoyance lives in *live* drift-nudging, so the judge starts **offline**: trails are logged silently, and a summary agent replays them into receipts shown where they'll be encountered (block page, morning brief) — e.g. "14 'quick research' passes this week; 9 clean; 5 ended on For You within 3 min — all after 10pm." Live callouts ship later, as a toggle, only once offline data proves detection is accurate.
 
@@ -52,14 +52,14 @@ The risk of annoyance lives in *live* drift-nudging, so the judge starts **offli
 
 ## Build plan (each phase ships usable)
 
-1. **Phase 1 — Surface-level blocking, draft guard, sentence-pass, trail log.** Path/DOM rules for X + YouTube; non-destructive enforcement (no more lost drafts); pass request = a sentence, parsed by Haiku into a scoped pass (graceful keyword-based fallback when no API key is configured); silent URL-trail logging during every pass.
+1. **Phase 1 — Surface-level blocking, draft guard, sentence-pass, trail log.** Path/DOM rules for X + YouTube; non-destructive enforcement (no more lost drafts); pass request = a sentence, parsed by a small model into a scoped pass (graceful keyword-based fallback when no API key is configured); silent URL-trail logging during every pass.
 2. **Phase 2 — Escalation + spiral interrupt + receipts.** Per-hour escalating pass friction; real-time binge detection with the receipts screen (fed by trail log); trail-based weekly receipts on the block page.
 3. **Phase 3 — Live judge.** Intent-vs-behavior matching in real time, adaptive tightening (learns *your* spiral signature — time of day, entry point, pass cadence). Gated on offline accuracy.
 
 ## Phase 1 — SHIPPED (2026-07-14)
 
 Built on branch `v2-rebuild`, version `3.0.0-phase1`. Surface rules for X + YouTube, non-destructive
-shadow-DOM overlay enforcement (no reloads), draft guard, sentence-pass (Haiku + keyword fallback),
+shadow-DOM overlay enforcement (no reloads), draft guard, sentence-pass (model + keyword fallback),
 and silent trail logging. Whole-site fallback for user-added domains, enforced in-page. Old
 navigation flow (`blocked.html` / `hard-blocked.html` / `content.js` / `timer.js`) removed. See
 `CLAUDE.md` for the file-by-file architecture.

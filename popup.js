@@ -16,12 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
   chrome.storage.sync.get(['blockedSites'], function(data) {
     if (data.blockedSites && data.blockedSites.length > 0) {
       data.blockedSites.forEach(siteData => {
-        // Handle both old format (string) and new format (object)
-        if (typeof siteData === 'string') {
-          addSiteToList(siteData, false, null);
-        } else {
-          addSiteToList(siteData.site, siteData.hardBlock || false, siteData.hardBlockExpiry || null);
-        }
+        addSiteToList(siteData.site, siteData.hardBlock || false, siteData.hardBlockExpiry || null);
       });
       emptyStateMessage.style.display = 'none';
     } else {
@@ -71,11 +66,9 @@ document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.sync.get('blockedSites', function(data) {
       const blockedSites = data.blockedSites || [];
 
-      // Check for duplicates (handle both old and new format)
-      const isDuplicate = blockedSites.some(existingSite => {
-        const existingSiteName = typeof existingSite === 'string' ? existingSite : existingSite.site;
-        return existingSiteName.toLowerCase() === site.toLowerCase();
-      });
+      const isDuplicate = blockedSites.some(existingSite =>
+        existingSite.site.toLowerCase() === site.toLowerCase()
+      );
       
       if (isDuplicate) {
         showInputError('This site is already blocked');
@@ -246,14 +239,11 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Find and update the site
       const updatedSites = blockedSites.map(siteData => {
-        const siteName = typeof siteData === 'string' ? siteData : siteData.site;
-        if (siteName === site) {
+        if (siteData.site === site) {
           const expiry = isHardBlock ? (Date.now() + (7 * 24 * 60 * 60 * 1000)) : null;
           return { site: site, hardBlock: isHardBlock, hardBlockExpiry: expiry };
         }
-        return typeof siteData === 'string' ? 
-          { site: siteData, hardBlock: false, hardBlockExpiry: null } : 
-          siteData;
+        return siteData;
       });
 
       chrome.storage.sync.set({blockedSites: updatedSites}, function() {
@@ -265,10 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function removeSite(site, li) {
     chrome.storage.sync.get('blockedSites', function(data) {
-      const blockedSites = data.blockedSites.filter(siteData => {
-        const siteName = typeof siteData === 'string' ? siteData : siteData.site;
-        return siteName !== site;
-      });
+      const blockedSites = data.blockedSites.filter(siteData => siteData.site !== site);
       
       chrome.storage.sync.set({blockedSites: blockedSites}, function() {
         li.remove();
@@ -289,11 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.sync.get(['blockedSites'], function(data) {
       if (data.blockedSites && data.blockedSites.length > 0) {
         data.blockedSites.forEach(siteData => {
-          if (typeof siteData === 'string') {
-            addSiteToList(siteData, false, null);
-          } else {
-            addSiteToList(siteData.site, siteData.hardBlock || false, siteData.hardBlockExpiry || null);
-          }
+          addSiteToList(siteData.site, siteData.hardBlock || false, siteData.hardBlockExpiry || null);
         });
         emptyStateMessage.style.display = 'none';
       } else {

@@ -1,12 +1,12 @@
-// Service worker: pass office (Anthropic call + fallback), pass lifecycle,
+// Service worker: pass office (OpenRouter call + fallback), pass lifecycle,
 // trail logging, per-hour analytics, and dynamic content-script registration
 // for user-added domains. Enforcement itself lives in the content script; this
 // worker never reloads or navigates a tab.
 
 importScripts('surface-rules.js', 'receipts.js');
 
-var ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
-var ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001';
+var OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+var OPENROUTER_MODEL = 'deepseek/deepseek-v4-flash';
 var TRAIL_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 var SPIRAL_COOLDOWN_MS = 60 * 60 * 1000; // fire at most once per hour
 
@@ -117,7 +117,7 @@ function buildPrompt(intent, platform, pathname) {
     '',
     'Rules:',
     '- durationMinutes: infer from intent; a quick lookup 2-3, some research 8-12, a break 15-25; default 8; clamp 1-30.',
-    '- scopeSurfaces: path-pattern strings (e.g. "/home","/search*","/explore") the intent legitimately needs. Always include the current path. Keep it tight.',
+    '- scopeSurfaces: glob path-patterns, * = wildcard (e.g. "/home", "/search*", "/*/status/*") the intent legitimately needs. Always include the current path. Keep it tight.',
     '- label: short restatement of what they are here for.'
   ].join('\n');
 }
@@ -129,25 +129,26 @@ function extractJson(text) {
   try { return JSON.parse(text.slice(start, end + 1)); } catch (e) { return null; }
 }
 
-function callAnthropic(apiKey, intent, platform, pathname) {
-  return fetch(ANTHROPIC_URL, {
+function callModel(apiKey, intent, platform, pathname) {
+  return fetch(OPENROUTER_URL, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
+      'authorization': 'Bearer ' + apiKey
     },
     body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
+      model: OPENROUTER_MODEL,
       max_tokens: 300,
+      // deepseek-v4-flash is a reasoning model; left on, it spends the whole
+      // token budget thinking and returns empty content.
+      reasoning: { enabled: false },
       messages: [{ role: 'user', content: buildPrompt(intent, platform, pathname) }]
     })
   }).then(function (resp) {
     if (!resp.ok) return resp.text().then(function (t) { throw new Error('API ' + resp.status + ': ' + t.slice(0, 120)); });
     return resp.json();
   }).then(function (data) {
-    var text = (data.content && data.content[0] && data.content[0].text) || '';
+    var text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
     var parsed = extractJson(text);
     if (!parsed) throw new Error('unparseable model output');
     return parsed;
@@ -166,7 +167,7 @@ function grantPass(req) {
     if (!apiKey) {
       return { durationMinutes: parseDurationFallback(req.intent), scopeSurfaces: [req.canonicalPattern], label: req.intent.slice(0, 60), fallback: true };
     }
-    return callAnthropic(apiKey, req.intent, req.platform, req.pathname).then(function (parsed) {
+    return callModel(apiKey, req.intent, req.platform, req.pathname).then(function (parsed) {
       var dur = parseInt(parsed.durationMinutes, 10);
       if (isNaN(dur) || dur < 1) dur = 5;
       dur = Math.min(30, dur);
@@ -242,9 +243,8 @@ chrome.alarms.onAlarm.addListener(function (alarm) {
 function domainsFromBlockedSites(blockedSites) {
   var set = {};
   (blockedSites || []).forEach(function (s) {
-    var name = typeof s === 'string' ? s : s.site;
-    if (!name) return;
-    set[AR.baseDomain(name.replace(/^https?:\/\//, '').split('/')[0])] = true;
+    if (!s || !s.site) return;
+    set[AR.baseDomain(s.site.replace(/^https?:\/\//, '').split('/')[0])] = true;
   });
   return Object.keys(set);
 }
@@ -294,29 +294,15 @@ chrome.storage.onChanged.addListener(function (changes, area) {
   if (area === 'sync' && changes.blockedSites) syncDynamicScripts();
 });
 
-// ---- migration + seed ------------------------------------------------------
-function migrateBlockedSites() {
+// ---- seed -------------------------------------------------------------------
+function seedDefaults() {
   return syncGet(['blockedSites']).then(function (data) {
-    var sites = data.blockedSites;
-    if (!Array.isArray(sites)) {
-      // Fresh install: seed the two managed platforms so it works out of the box.
-      return syncSet({ blockedSites: [
-        { site: 'x.com', hardBlock: false, hardBlockExpiry: null },
-        { site: 'youtube.com', hardBlock: false, hardBlockExpiry: null }
-      ] });
-    }
-    var needs = sites.some(function (s) {
-      return typeof s === 'string' || (typeof s === 'object' && s.hardBlockExpiry === undefined);
-    });
-    if (!needs) return;
-    var migrated = sites.map(function (s) {
-      if (typeof s === 'string') return { site: s, hardBlock: false, hardBlockExpiry: null };
-      if (s.hardBlockExpiry === undefined) {
-        return { site: s.site, hardBlock: s.hardBlock || false, hardBlockExpiry: s.hardBlock ? (Date.now() + 7 * 86400000) : null };
-      }
-      return s;
-    });
-    return syncSet({ blockedSites: migrated });
+    if (Array.isArray(data.blockedSites)) return;
+    // Fresh install: seed the two managed platforms so it works out of the box.
+    return syncSet({ blockedSites: [
+      { site: 'x.com', hardBlock: false, hardBlockExpiry: null },
+      { site: 'youtube.com', hardBlock: false, hardBlockExpiry: null }
+    ] });
   });
 }
 
@@ -337,7 +323,7 @@ function cleanupExpiredHardBlocks() {
 }
 
 function init() {
-  migrateBlockedSites()
+  seedDefaults()
     .then(cleanupExpiredHardBlocks)
     .then(syncDynamicScripts);
 }

@@ -29,14 +29,14 @@
   <h1>Attention Rehab settings</h1>
   <p class="lede">The pass office can use Claude to read your intent and scope a pass to exactly what you came to do. Without a key it still works — it just parses a duration from your words.</p>
   <div class="card">
-    <label for="api-key">Anthropic API key</label>
+    <label for="api-key">OpenRouter API key</label>
     <input type="password" id="api-key" placeholder="sk-ant-...">
     <div class="row">
       <button id="save">Save</button>
       <button id="clear" class="secondary">Clear</button>
       <span class="status" id="status"></span>
     </div>
-    <p class="hint">Stored in <code>chrome.storage.sync</code>, used only for pass requests. Model: <code>claude-haiku-4-5</code>. Get a key at <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a>.</p>
+    <p class="hint">Stored in <code>chrome.storage.sync</code>, used only for pass requests. Model: <code>deepseek/deepseek-v4-flash</code>. Get a key at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>.</p>
   </div>
   <script src="options.js"></script>
 </body>

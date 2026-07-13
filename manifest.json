@@ -4,13 +4,13 @@
   "version": "3.0.0",
   "version_name": "3.0.0-phase2",
   "description": "Block distracting feeds — not whole sites — with in-page, draft-safe access passes.",
-  "permissions": ["storage", "tabs", "alarms", "scripting"],
+  "permissions": ["storage", "alarms", "scripting"],
   "optional_host_permissions": ["*://*/*"],
   "host_permissions": [
     "*://*.x.com/*",
     "*://*.twitter.com/*",
     "*://*.youtube.com/*",
-    "https://api.anthropic.com/*"
+    "https://openrouter.ai/*"
   ],
   "action": {
     "default_popup": "popup.html",

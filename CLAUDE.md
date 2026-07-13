@@ -33,7 +33,7 @@ Vanilla JS, no build system, no npm. Rationale goes in commit messages, not inli
   element + shows a full-viewport **shadow-DOM** overlay. Detects SPA route changes (history hooks +
   `yt-navigate-finish` + 1s poll) and re-evaluates every surface without a reload. Draft guard,
   countdown pill, corner banner, heartbeat trail logging.
-- **background.js** — service worker. The pass office (Anthropic Haiku call + graceful keyword
+- **background.js** — service worker. The pass office (OpenRouter call + graceful keyword
   fallback), pass lifecycle + expiry alarms, trail log, per-hour analytics, and dynamic
   content-script registration for user-added domains. **Never** reloads or navigates a tab.
   Also runs spiral detection: after every grant and heartbeat, `maybeTriggerSpiral()` re-summarizes
@@ -41,7 +41,7 @@ Vanilla JS, no build system, no npm. Rationale goes in commit messages, not inli
   (with a precomputed summary) + `lastSpiralTs` to local storage. The content script renders it.
 - **popup.html / popup.js** — manage blocked domains + hard block; requests host permission for
   user-added domains; link to options.
-- **options.html / options.js** — set the Anthropic API key (`chrome.storage.sync.apiKey`).
+- **options.html / options.js** — set the OpenRouter API key (`chrome.storage.sync.apiKey`).
 
 ### Enforcement contract (hard rules)
 
@@ -84,8 +84,8 @@ The pass overlay always shows a one-line receipt ("Nth visit today · X min on f
 
 ### Sentence-pass
 
-Overlay asks "What are you here for?". On submit → background calls Anthropic
-(`claude-haiku-4-5-20251001`) → strict JSON `{durationMinutes 1-30, scopeSurfaces[], label}`. With
+Overlay asks "What are you here for?". On submit → background calls OpenRouter
+(`deepseek/deepseek-v4-flash`) → strict JSON `{durationMinutes 1-30, scopeSurfaces[], label}`. With
 no key or on any API error, it falls back to parsing a duration from the text (default 5, cap 30)
 and scopes to the requested surface — the flow feels identical. A pass is keyed by base domain in
 `chrome.storage.local.activePasses`; while active and the current surface is in scope, the overlay
@@ -93,8 +93,8 @@ stays down and a countdown pill shows.
 
 ### Data model (chrome.storage)
 
-- **sync**: `blockedSites` (array of `{site, hardBlock, hardBlockExpiry}`; legacy string entries
-  migrated on load), `apiKey`.
+- **sync**: `blockedSites` (array of `{site, hardBlock, hardBlockExpiry}`; seeded with x.com +
+  youtube.com on fresh install — no legacy formats, clean rewrite), `apiKey`.
 - **local**: `activePasses` (`{ [domain]: pass }`), `trailLog` (`{ passes: [{passId, domain,
   intent, label, scopeSurfaces, startTs, endTs, events:[{url, ts, dwellMs, inScope}]}] }`, pruned
   to 30 days), `passData` (`{ [YYYY-MM-DD]: { [hour]: {count, minutes} } }` — v1 analytics spirit),

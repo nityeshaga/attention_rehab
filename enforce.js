@@ -22,6 +22,9 @@
   var hiddenFeeds = [];
   var scrollLocked = false;
   var submitting = false;
+  var currentView = null; // which overlay is up — evaluate() skips identical
+                          // re-renders so late load/storage events never wipe
+                          // a half-typed intent
 
   // ---- storage helpers -----------------------------------------------------
   function syncGet(keys) {
@@ -35,12 +38,9 @@
     if (!Array.isArray(blockedSites)) return null;
     for (var i = 0; i < blockedSites.length; i++) {
       var s = blockedSites[i];
-      var name = typeof s === 'string' ? s : s.site;
-      if (!name) continue;
-      var entryBase = AR.baseDomain(name.replace(/^https?:\/\//, '').split('/')[0]);
-      if (entryBase === base) {
-        return typeof s === 'string' ? { site: s, hardBlock: false, hardBlockExpiry: null } : s;
-      }
+      if (!s || !s.site) continue;
+      var entryBase = AR.baseDomain(s.site.replace(/^https?:\/\//, '').split('/')[0]);
+      if (entryBase === base) return s;
     }
     return null;
   }
@@ -197,6 +197,7 @@
   }
 
   function clearOverlay() {
+    currentView = null;
     if (passWaitInterval) { clearInterval(passWaitInterval); passWaitInterval = null; }
     if (overlayShadow) overlayShadow.innerHTML = '';
     if (overlayHost && overlayHost.parentNode) overlayHost.parentNode.removeChild(overlayHost);
@@ -345,6 +346,7 @@
   // ---- spiral interrupt overlay --------------------------------------------
   var SPIRAL_ACK = 'i see the pattern';
   function renderSpiralOverlay(sig) {
+    if (passWaitInterval) { clearInterval(passWaitInterval); passWaitInterval = null; }
     ensureHost();
     lockScroll(true);
     hidePill();
@@ -523,7 +525,8 @@
       var sig = local.spiralSignal;
       if (sig && local.spiralAck !== sig.id) {
         if (hasActiveDraft()) { scheduleDraftRecheck(); return; }
-        stopHeartbeat(); renderSpiralOverlay(sig); return;
+        if (currentView === 'spiral:' + sig.id) return;
+        stopHeartbeat(); renderSpiralOverlay(sig); currentView = 'spiral:' + sig.id; return;
       }
 
       var hard = !!site.hardBlock && (!site.hardBlockExpiry || Date.now() < site.hardBlockExpiry);
@@ -536,7 +539,10 @@
         // hard block ignores drafts on blocked feeds? No: never destroy work.
         if (hasActiveDraft()) { clearOverlay(); restoreFeed(); showBanner(); scheduleDraftRecheck(); return; }
         hideBanner();
-        renderHardOverlay(cls, site);
+        if (currentView !== 'hard:' + cls.base) {
+          renderHardOverlay(cls, site);
+          currentView = 'hard:' + cls.base;
+        }
         return;
       }
 
@@ -565,7 +571,11 @@
       }
       hideBanner();
       hideFeed(cls.feedSelectors);
-      renderPassOverlay(cls, cls.base, summary);
+      var viewKey = 'pass:' + cls.surfaceId + ':' + ARReceipts.escalationLevel(summary.passesLastHour);
+      if (currentView !== viewKey) {
+        renderPassOverlay(cls, cls.base, summary);
+        currentView = viewKey;
+      }
     }, function () { evaluating = false; });
   }
 
@@ -609,7 +619,7 @@
 
   // React to pass grants / block-list edits from other contexts.
   chrome.storage.onChanged.addListener(function (changes, area) {
-    if ((area === 'local' && (changes.activePasses || changes.spiralSignal)) ||
+    if ((area === 'local' && (changes.activePasses || changes.spiralSignal || changes.spiralAck)) ||
         (area === 'sync' && changes.blockedSites)) {
       evaluate();
     }
