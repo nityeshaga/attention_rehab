@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Attention Rehab",
   "version": "3.0.0",
-  "version_name": "3.0.0-phase1",
+  "version_name": "3.0.0-phase2",
   "description": "Block distracting feeds — not whole sites — with in-page, draft-safe access passes.",
   "permissions": ["storage", "tabs", "alarms", "scripting"],
   "optional_host_permissions": ["*://*/*"],
@@ -30,7 +30,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.x.com/*", "*://*.twitter.com/*", "*://*.youtube.com/*"],
-      "js": ["surface-rules.js", "enforce.js"],
+      "js": ["surface-rules.js", "receipts.js", "enforce.js"],
       "run_at": "document_start"
     }
   ],

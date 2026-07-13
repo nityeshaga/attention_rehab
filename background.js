@@ -3,11 +3,12 @@
 // for user-added domains. Enforcement itself lives in the content script; this
 // worker never reloads or navigates a tab.
 
-importScripts('surface-rules.js');
+importScripts('surface-rules.js', 'receipts.js');
 
 var ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 var ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001';
 var TRAIL_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+var SPIRAL_COOLDOWN_MS = 60 * 60 * 1000; // fire at most once per hour
 
 // ---- small storage helpers -------------------------------------------------
 function localGet(keys) { return new Promise(function (r) { chrome.storage.local.get(keys, r); }); }
@@ -71,7 +72,25 @@ function recordHeartbeat(passId, url, inScope) {
     } else {
       p.events.push({ url: url, ts: Date.now(), dwellMs: 0, inScope: inScope });
     }
-    return localSet({ trailLog: log });
+    return localSet({ trailLog: log }).then(maybeTriggerSpiral);
+  });
+}
+
+// ---- spiral interrupt ------------------------------------------------------
+// Binge = 3+ passes granted this hour OR >20 min on feeds this hour. When it
+// trips (and we haven't tripped in the last hour), stash a signal the content
+// script picks up and renders the full-screen receipts moment. The content
+// script still gates on the draft guard — it never shows over unsaved work.
+function maybeTriggerSpiral() {
+  return localGet(['trailLog', 'lastSpiralTs']).then(function (r) {
+    var now = Date.now();
+    if (r.lastSpiralTs && now - r.lastSpiralTs < SPIRAL_COOLDOWN_MS) return;
+    var summary = ARReceipts.summarize(r.trailLog || { passes: [] }, now);
+    if (!ARReceipts.isBinge(summary)) return;
+    return localSet({
+      lastSpiralTs: now,
+      spiralSignal: { id: 's_' + now, ts: now, summary: summary }
+    });
   });
 }
 
@@ -183,7 +202,7 @@ function grantPass(req) {
     }).then(function () {
       chrome.alarms.create('expirePass_' + req.domain, { when: pass.endTs });
       return Promise.all([openTrail(pass), recordGrant(result.durationMinutes)]);
-    }).then(function () {
+    }).then(maybeTriggerSpiral).then(function () {
       return { granted: true, pass: pass, fallback: result.fallback };
     });
   });
@@ -242,7 +261,7 @@ function syncDynamicScripts() {
         return {
           id: 'ar-' + d,
           matches: ['*://*.' + d + '/*', '*://' + d + '/*'],
-          js: ['surface-rules.js', 'enforce.js'],
+          js: ['surface-rules.js', 'receipts.js', 'enforce.js'],
           runAt: 'document_start'
         };
       });

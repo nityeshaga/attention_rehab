@@ -64,4 +64,23 @@ and silent trail logging. Whole-site fallback for user-added domains, enforced i
 navigation flow (`blocked.html` / `hard-blocked.html` / `content.js` / `timer.js`) removed. See
 `CLAUDE.md` for the file-by-file architecture.
 
+## Phase 2 — SHIPPED (2026-07-14)
+
+Version `3.0.0-phase2` on `v2-rebuild`. Three pieces, all inside the Phase 1 architecture
+(shadow-DOM overlay, no reloads, draft-guard supremacy):
+
+- **Escalating friction.** Passes in the trailing 60 min drive a ladder (`ARReceipts.escalationLevel`):
+  1st = one click; 2nd = badge + explicit second confirm; 3rd+ = mandatory 60s wait (input disabled,
+  visible countdown) + pushback receipts. Resets as passes age out of the window.
+- **Spiral interrupt.** Background detects a binge (3+ passes / hour OR >20 min on feeds / hour),
+  writes `spiralSignal`; the content script shows a distinct full-screen receipts moment (visits
+  today, feed minutes today, passes this hour, clean-day streak). Dismiss = type a fixed
+  acknowledgment sentence. At most once/hour; never over an active draft.
+- **Receipts on the pass panel.** One-line "Nth visit today · X min on feeds today" + a "last 7 days"
+  line (passes, clean vs drifted, top drift hour), all from the new `receipts.js` — the deterministic
+  seed of the Phase 3 offline judge.
+
+New file: `receipts.js` (pure summary functions over the trail log, both worlds). New local-storage
+keys: `spiralSignal`, `spiralAck`, `lastSpiralTs`.
+
 Keep this CLAUDE.md-adjacent doc up to date with decisions as they're made.
