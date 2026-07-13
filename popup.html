@@ -4,46 +4,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Attention Rehab</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
   <div class="popup-container">
     <div class="header">
-      <div class="logo-container">
-        <div class="icon">🛡️</div>
-        <h1>Attention Rehab</h1>
-      </div>
+      <p class="eyebrow"><span>Attention Rehab</span><span class="rule"></span><span>the ledger</span></p>
+      <h1>Blocked surfaces</h1>
     </div>
-    
+
     <div class="content-section">
       <div id="blocked-sites">
-        <h2>Blocked Sites</h2>
         <div class="input-group">
-          <input type="text" id="new-site" placeholder="e.g., twitter.com, youtube.com">
+          <input type="text" id="new-site" placeholder="e.g. twitter.com, reddit.com">
           <button id="add-site" class="primary-button">Add</button>
         </div>
         <div class="site-list-container">
           <ul id="site-list"></ul>
           <div class="empty-state" id="empty-sites-message">
-            <p>No sites blocked yet. Add your first distraction above.</p>
+            <p>Nothing on the ledger yet. Add your first slot machine above.</p>
           </div>
         </div>
       </div>
     </div>
-    
+
     <div class="footer">
-      <div class="tip-container">
-        <div class="tip-icon">💡</div>
-        <p class="tip-text">X and YouTube block only the <strong>feed</strong> — compose, search, DMs, and single posts stay open. Other domains block whole-site, in-page (no reloads, no lost drafts).</p>
-        <p class="tip-text">Use <strong>Hard Block</strong> 🚫 to remove passes entirely for 7 days.</p>
-        <p class="tip-text"><a href="#" id="open-options">Set your OpenRouter API key →</a></p>
-      </div>
+      <p class="tip-text">X and YouTube block only the <strong>feed</strong> — compose, search, DMs and single posts stay open. Other domains block whole-site, in-page: no reloads, no lost drafts.</p>
+      <p class="tip-text"><strong>Hard block</strong> removes passes entirely for 7 days. No undo.</p>
+      <p class="tip-text"><a href="#" id="open-options">Set your OpenRouter API key &rarr;</a></p>
     </div>
   </div>
-  
+
   <script src="popup.js"></script>
 </body>
 </html>

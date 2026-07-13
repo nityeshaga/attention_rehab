@@ -4,33 +4,142 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Attention Rehab — Settings</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      max-width: 620px; margin: 0 auto; padding: 40px 24px; color: #1e293b; background: #f8fafc; }
-    h1 { font-size: 24px; margin: 0 0 6px; }
-    p.lede { color: #64748b; margin: 0 0 28px; line-height: 1.5; }
-    label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
-    input[type="password"], input[type="text"] { width: 100%; box-sizing: border-box; padding: 12px 14px;
-      font-size: 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: inherit; }
-    .row { display: flex; gap: 10px; margin-top: 14px; align-items: center; }
-    button { background: #0f172a; color: #fff; border: none; border-radius: 10px; padding: 12px 20px;
-      font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
-    button.secondary { background: #e2e8f0; color: #0f172a; }
-    .status { font-size: 13px; color: #059669; min-height: 18px; }
-    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; }
-    .hint { font-size: 12px; color: #94a3b8; margin-top: 10px; line-height: 1.5; }
-    a { color: #0284c7; }
+    /* The ledger, full-page: a paper document on the checkpoint backdrop. */
+    :root {
+      --paper: #f5efe2;
+      --ink: #211d17;
+      --ink-soft: #57503f;
+      --muted: #8a8070;
+      --rule: #d3c6a9;
+      --amber: #92400e;
+      --red: #b3261e;
+      --serif: Charter, 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+      --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      box-sizing: border-box;
+      font-family: var(--serif);
+      color: var(--ink);
+      background: radial-gradient(120% 90% at 50% 0%, #282119 0%, #161210 55%, #0c0a08 100%);
+    }
+    .card {
+      position: relative;
+      max-width: 560px;
+      width: 100%;
+      background: linear-gradient(176deg, #f8f3e7 0%, #f1e8d5 100%);
+      padding: 34px 40px 30px;
+      border-radius: 2px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.65), 0 44px 90px rgba(0,0,0,.62), 0 4px 18px rgba(0,0,0,.45);
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: var(--ink);
+    }
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 18px;
+      font: 700 11px/1 var(--mono);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .eyebrow .rule { flex: 1; height: 1px; background: var(--rule); }
+    h1 {
+      font-size: 30px;
+      line-height: 1.1;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      margin: 0 0 10px;
+    }
+    p.lede {
+      font-size: 15.5px;
+      line-height: 1.55;
+      color: var(--ink-soft);
+      margin: 0 0 24px;
+    }
+    label {
+      display: block;
+      font: 700 11px/1 var(--mono);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin-bottom: 8px;
+    }
+    input[type="password"], input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 13px 15px;
+      background: rgba(255,255,255,.55);
+      color: var(--ink);
+      border: 1px solid #c9bda1;
+      border-radius: 2px;
+      font: 500 13.5px/1.4 var(--mono);
+      caret-color: var(--red);
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--ink);
+      box-shadow: 0 0 0 3px rgba(33,29,23,.08);
+    }
+    .row { display: flex; gap: 12px; margin-top: 16px; align-items: center; }
+    button {
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      border-radius: 2px;
+      padding: 13px 20px;
+      font: 700 11.5px/1 var(--mono);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 rgba(33,29,23,.22);
+      transition: transform .12s, box-shadow .12s;
+    }
+    button:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 rgba(33,29,23,.28); }
+    button:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(33,29,23,.25); }
+    button.secondary {
+      background: transparent;
+      color: var(--ink-soft);
+      border: 1px solid #ab9e80;
+      box-shadow: none;
+    }
+    button.secondary:hover { color: var(--ink); border-color: var(--ink); transform: none; box-shadow: none; }
+    .status {
+      font: 600 12px/1.4 var(--mono);
+      color: #3f6b34;
+      min-height: 18px;
+    }
+    .hint {
+      font: 500 11px/1.7 var(--mono);
+      color: var(--muted);
+      margin: 18px 0 0;
+      padding-top: 14px;
+      border-top: 1px dashed #b9ac8e;
+    }
+    .hint code { font-family: inherit; color: var(--ink-soft); }
+    a { color: var(--amber); font-weight: 700; }
+    a:hover { color: var(--red); }
   </style>
 </head>
 <body>
-  <h1>Attention Rehab settings</h1>
-  <p class="lede">The pass office can use Claude to read your intent and scope a pass to exactly what you came to do. Without a key it still works — it just parses a duration from your words.</p>
   <div class="card">
+    <p class="eyebrow"><span>Attention Rehab</span><span class="rule"></span><span>pass office</span></p>
+    <h1>Settings</h1>
+    <p class="lede">The pass office can use a model to read your intent and scope a pass to exactly what you came to do. Without a key it still works — it just parses a duration from your words.</p>
     <label for="api-key">OpenRouter API key</label>
-    <input type="password" id="api-key" placeholder="sk-ant-...">
+    <input type="password" id="api-key" placeholder="sk-or-...">
     <div class="row">
       <button id="save">Save</button>
       <button id="clear" class="secondary">Clear</button>

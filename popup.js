@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setTimeout(() => {
       newSiteInput.classList.remove('error');
-      newSiteInput.placeholder = 'e.g., twitter.com, youtube.com';
+      newSiteInput.placeholder = 'e.g. twitter.com, reddit.com';
     }, 2000);
   }
 
@@ -164,9 +164,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add hard block indicator icon
     if (isHardBlock) {
       const indicator = document.createElement('span');
-      indicator.textContent = '🚫';
+      indicator.textContent = 'no passes';
       indicator.className = 'hard-block-indicator';
-      indicator.title = 'Hard Block - No access passes available';
+      indicator.title = 'Hard block — no access passes available';
       siteInfo.appendChild(indicator);
     }
 
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
       hardBlockInput.disabled = true;
       hardBlockLabel.textContent = `${remainingDays}d`;
       hardBlockLabel.title = `Hard block active for ${remainingDays} more days`;
-      hardBlockLabel.style.color = '#dc2626';
+      hardBlockLabel.style.color = '#b3261e';
       hardBlockLabel.style.fontSize = '9px';
     }
     
