@@ -53,8 +53,9 @@ Vanilla JS, no build system, no npm. Rationale goes in commit messages, not inli
 
 ### Surfaces
 
-- **X / Twitter** — blocked: `/`, `/home`, `/explore`, `/i/trending`. Allowed (no pass): compose,
-  notifications, messages, search, `/<user>/status/<id>`, profiles, settings.
+- **X / Twitter** — blocked: `/`, `/home`, `/explore`, `/i/trending`, `/notifications` (a feed in
+  disguise — Nityesh, pre-3.0.0 release). Allowed (no pass): compose, messages, search,
+  `/<user>/status/<id>`, profiles, settings.
 - **YouTube** — blocked: `/` (home feed), `/feed/*` (except `/feed/subscriptions`), `/shorts/*`.
   Allowed: `/watch`, `/results`, channel pages, subscriptions.
 - **Other (user-added) domains** — whole-domain block, enforced in-page via overlay.

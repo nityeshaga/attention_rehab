@@ -28,10 +28,10 @@
   }
 
   // X / Twitter --------------------------------------------------------------
-  // Blocked: /home (For You + Following timeline), /explore, /i/trending, and
-  // the logged-in root "/" (which is the home feed). Everything else — compose,
-  // notifications, messages, search, a specific tweet, profiles, settings — is
-  // allowed by default and needs no pass.
+  // Blocked: /home (For You + Following timeline), /explore, /i/trending,
+  // /notifications (a feed in disguise), and the logged-in root "/" (which is
+  // the home feed). Everything else — compose, messages, search, a specific
+  // tweet, profiles, settings — is allowed by default and needs no pass.
   function classifyX(pathname) {
     const p = normPath(pathname);
     if (p === '/' || p === '/home') {
@@ -42,6 +42,9 @@
     }
     if (p === '/i/trending' || p.startsWith('/i/trending')) {
       return blocked('x-trending', '/i/trending', ['[data-testid="primaryColumn"]']);
+    }
+    if (p === '/notifications' || p.startsWith('/notifications/')) {
+      return blocked('x-notifications', '/notifications', ['[data-testid="primaryColumn"]']);
     }
     return allowed('x-open', p);
   }
@@ -116,8 +119,8 @@
   // Human-readable vocabulary handed to the model when parsing an intent.
   const PLATFORM_VOCAB = {
     x: {
-      blocked: ['/home (the For You and Following timeline)', '/explore', '/i/trending'],
-      allowed: ['/compose/*', '/notifications', '/messages', '/search', '/<user>/status/<id> (a single tweet)', 'profile pages', '/settings']
+      blocked: ['/home (the For You and Following timeline)', '/explore', '/i/trending', '/notifications'],
+      allowed: ['/compose/*', '/messages', '/search', '/<user>/status/<id> (a single tweet)', 'profile pages', '/settings']
     },
     youtube: {
       blocked: ['/ (homepage feed)', '/feed/* (except /feed/subscriptions)', '/shorts/*'],
