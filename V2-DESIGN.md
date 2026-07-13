@@ -56,7 +56,8 @@ The risk of annoyance lives in *live* drift-nudging, so the judge starts **offli
 2. **Phase 2 — Escalation + spiral interrupt + receipts.** Per-hour escalating pass friction; real-time binge detection with the receipts screen (fed by trail log); trail-based weekly receipts on the block page.
 3. **Phase 2.5 — Hard block rebuilt** (spec in [issue #2](https://github.com/nityeshaga/attention_rehab/issues/2)): surface-level locks, natural-boundary durations, 24h-delay unlock, offered at the moment of failure (spiral screen / level-3 wait), and trail-proposed quiet hours. Principle: flexible going in, rigid once inside.
 4. **Phase 2.6 — Weekly ledger review** (spec in [issue #3](https://github.com/nityeshaga/attention_rehab/issues/3)): daily trail sync to the Tailscale box, an AI-written weekly narrative that names mechanisms (with receipts-style charts as evidence, Slack-delivered), and rare one-line earned observations on the pass slip. Story first — charts you have to visit become wallpaper. Doubles as the Phase 3 accuracy gate.
-5. **Phase 3 — Live judge.** Intent-vs-behavior matching in real time, adaptive tightening (learns *your* spiral signature — time of day, entry point, pass cadence). Gated on offline accuracy.
+5. **Phase 2.7 — Promote good behavior** (spec in [issue #4](https://github.com/nityeshaga/attention_rehab/issues/4)): honored-pass streaks with one weekly grace, credit lines on the slip, an "honored" stamp on clean exits, and the express lane — earned one-click passes that drift revokes. Reward = autonomy, never confetti.
+6. **Phase 3 — Live judge.** Intent-vs-behavior matching in real time, adaptive tightening (learns *your* spiral signature — time of day, entry point, pass cadence). Gated on offline accuracy.
 
 ## Phase 1 — SHIPPED (2026-07-14)
 
