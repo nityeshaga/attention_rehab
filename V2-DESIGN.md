@@ -56,4 +56,12 @@ The risk of annoyance lives in *live* drift-nudging, so the judge starts **offli
 2. **Phase 2 — Escalation + spiral interrupt + receipts.** Per-hour escalating pass friction; real-time binge detection with the receipts screen (fed by trail log); trail-based weekly receipts on the block page.
 3. **Phase 3 — Live judge.** Intent-vs-behavior matching in real time, adaptive tightening (learns *your* spiral signature — time of day, entry point, pass cadence). Gated on offline accuracy.
 
+## Phase 1 — SHIPPED (2026-07-14)
+
+Built on branch `v2-rebuild`, version `3.0.0-phase1`. Surface rules for X + YouTube, non-destructive
+shadow-DOM overlay enforcement (no reloads), draft guard, sentence-pass (Haiku + keyword fallback),
+and silent trail logging. Whole-site fallback for user-added domains, enforced in-page. Old
+navigation flow (`blocked.html` / `hard-blocked.html` / `content.js` / `timer.js`) removed. See
+`CLAUDE.md` for the file-by-file architecture.
+
 Keep this CLAUDE.md-adjacent doc up to date with decisions as they're made.

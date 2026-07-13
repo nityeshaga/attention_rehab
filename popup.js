@@ -3,7 +3,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const addSiteButton = document.getElementById('add-site');
   const siteList = document.getElementById('site-list');
   const emptyStateMessage = document.getElementById('empty-sites-message');
-  const passBtns = document.querySelectorAll('#access-passes button');
+  const STATIC_HOSTS = ['x.com', 'twitter.com', 'youtube.com'];
+
+  function baseDomain(hostname) {
+    hostname = hostname.replace(/^www\./, '').toLowerCase();
+    const parts = hostname.split('.');
+    if (parts.length > 2) return parts.slice(-2).join('.');
+    return hostname;
+  }
 
   // Load blocked sites
   chrome.storage.sync.get(['blockedSites'], function(data) {
@@ -33,13 +40,13 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
 
-  // Request access pass
-  passBtns.forEach(btn => {
-    btn.addEventListener('click', function() {
-      const duration = this.id.split('-')[1];
-      chrome.runtime.sendMessage({action: 'requestPass', duration: duration});
+  const openOptions = document.getElementById('open-options');
+  if (openOptions) {
+    openOptions.addEventListener('click', function (e) {
+      e.preventDefault();
+      chrome.runtime.openOptionsPage();
     });
-  });
+  }
 
   function addNewSite() {
     let site = newSiteInput.value.trim();
@@ -77,11 +84,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Add in new object format
       blockedSites.push({ site: site, hardBlock: false, hardBlockExpiry: null });
-      chrome.storage.sync.set({blockedSites: blockedSites}, function() {
-        addSiteToList(site, false, null);
-        newSiteInput.value = '';
-        emptyStateMessage.style.display = 'none';
-      });
+
+      function persist() {
+        chrome.storage.sync.set({blockedSites: blockedSites}, function() {
+          addSiteToList(site, false, null);
+          newSiteInput.value = '';
+          emptyStateMessage.style.display = 'none';
+        });
+      }
+
+      // Managed platforms already have host permission; user-added domains need
+      // one granted (in this user gesture) so the enforcer can be injected.
+      const base = baseDomain(site);
+      if (STATIC_HOSTS.indexOf(base) === -1) {
+        const origins = ['*://*.' + base + '/*', '*://' + base + '/*'];
+        chrome.permissions.request({ origins: origins }, function (granted) {
+          if (!granted) {
+            showInputError('Permission needed to block ' + base);
+            return;
+          }
+          persist();
+        });
+      } else {
+        persist();
+      }
     });
   }
 
