@@ -138,10 +138,9 @@ function callModel(apiKey, intent, platform, pathname) {
     },
     body: JSON.stringify({
       model: OPENROUTER_MODEL,
-      max_tokens: 300,
-      // deepseek-v4-flash is a reasoning model; left on, it spends the whole
-      // token budget thinking and returns empty content.
-      reasoning: { enabled: false },
+      // Generous budget on purpose: deepseek-v4-flash is a reasoning model and
+      // returns EMPTY content if reasoning truncates at a small max_tokens.
+      max_tokens: 30000,
       messages: [{ role: 'user', content: buildPrompt(intent, platform, pathname) }]
     })
   }).then(function (resp) {
