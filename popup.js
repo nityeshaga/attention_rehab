@@ -3,18 +3,20 @@ document.addEventListener('DOMContentLoaded', function() {
   const addSiteButton = document.getElementById('add-site');
   const siteList = document.getElementById('site-list');
   const emptyStateMessage = document.getElementById('empty-sites-message');
-  const passBtns = document.querySelectorAll('#access-passes button');
+  const STATIC_HOSTS = ['x.com', 'twitter.com', 'youtube.com'];
+
+  function baseDomain(hostname) {
+    hostname = hostname.replace(/^www\./, '').toLowerCase();
+    const parts = hostname.split('.');
+    if (parts.length > 2) return parts.slice(-2).join('.');
+    return hostname;
+  }
 
   // Load blocked sites
   chrome.storage.sync.get(['blockedSites'], function(data) {
     if (data.blockedSites && data.blockedSites.length > 0) {
       data.blockedSites.forEach(siteData => {
-        // Handle both old format (string) and new format (object)
-        if (typeof siteData === 'string') {
-          addSiteToList(siteData, false, null);
-        } else {
-          addSiteToList(siteData.site, siteData.hardBlock || false, siteData.hardBlockExpiry || null);
-        }
+        addSiteToList(siteData.site, siteData.hardBlock || false, siteData.hardBlockExpiry || null);
       });
       emptyStateMessage.style.display = 'none';
     } else {
@@ -33,13 +35,13 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
 
-  // Request access pass
-  passBtns.forEach(btn => {
-    btn.addEventListener('click', function() {
-      const duration = this.id.split('-')[1];
-      chrome.runtime.sendMessage({action: 'requestPass', duration: duration});
+  const openOptions = document.getElementById('open-options');
+  if (openOptions) {
+    openOptions.addEventListener('click', function (e) {
+      e.preventDefault();
+      chrome.runtime.openOptionsPage();
     });
-  });
+  }
 
   function addNewSite() {
     let site = newSiteInput.value.trim();
@@ -64,11 +66,9 @@ document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.sync.get('blockedSites', function(data) {
       const blockedSites = data.blockedSites || [];
 
-      // Check for duplicates (handle both old and new format)
-      const isDuplicate = blockedSites.some(existingSite => {
-        const existingSiteName = typeof existingSite === 'string' ? existingSite : existingSite.site;
-        return existingSiteName.toLowerCase() === site.toLowerCase();
-      });
+      const isDuplicate = blockedSites.some(existingSite =>
+        existingSite.site.toLowerCase() === site.toLowerCase()
+      );
       
       if (isDuplicate) {
         showInputError('This site is already blocked');
@@ -77,11 +77,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Add in new object format
       blockedSites.push({ site: site, hardBlock: false, hardBlockExpiry: null });
-      chrome.storage.sync.set({blockedSites: blockedSites}, function() {
-        addSiteToList(site, false, null);
-        newSiteInput.value = '';
-        emptyStateMessage.style.display = 'none';
-      });
+
+      function persist() {
+        chrome.storage.sync.set({blockedSites: blockedSites}, function() {
+          addSiteToList(site, false, null);
+          newSiteInput.value = '';
+          emptyStateMessage.style.display = 'none';
+        });
+      }
+
+      // Managed platforms already have host permission; user-added domains need
+      // one granted (in this user gesture) so the enforcer can be injected.
+      const base = baseDomain(site);
+      if (STATIC_HOSTS.indexOf(base) === -1) {
+        const origins = ['*://*.' + base + '/*', '*://' + base + '/*'];
+        chrome.permissions.request({ origins: origins }, function (granted) {
+          if (!granted) {
+            showInputError('Permission needed to block ' + base);
+            return;
+          }
+          persist();
+        });
+      } else {
+        persist();
+      }
     });
   }
 
@@ -91,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setTimeout(() => {
       newSiteInput.classList.remove('error');
-      newSiteInput.placeholder = 'e.g., twitter.com, youtube.com';
+      newSiteInput.placeholder = 'e.g. twitter.com, reddit.com';
     }, 2000);
   }
 
@@ -145,9 +164,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add hard block indicator icon
     if (isHardBlock) {
       const indicator = document.createElement('span');
-      indicator.textContent = '🚫';
+      indicator.textContent = 'no passes';
       indicator.className = 'hard-block-indicator';
-      indicator.title = 'Hard Block - No access passes available';
+      indicator.title = 'Hard block — no access passes available';
       siteInfo.appendChild(indicator);
     }
 
@@ -180,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
       hardBlockInput.disabled = true;
       hardBlockLabel.textContent = `${remainingDays}d`;
       hardBlockLabel.title = `Hard block active for ${remainingDays} more days`;
-      hardBlockLabel.style.color = '#dc2626';
+      hardBlockLabel.style.color = '#b3261e';
       hardBlockLabel.style.fontSize = '9px';
     }
     
@@ -220,14 +239,11 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Find and update the site
       const updatedSites = blockedSites.map(siteData => {
-        const siteName = typeof siteData === 'string' ? siteData : siteData.site;
-        if (siteName === site) {
+        if (siteData.site === site) {
           const expiry = isHardBlock ? (Date.now() + (7 * 24 * 60 * 60 * 1000)) : null;
           return { site: site, hardBlock: isHardBlock, hardBlockExpiry: expiry };
         }
-        return typeof siteData === 'string' ? 
-          { site: siteData, hardBlock: false, hardBlockExpiry: null } : 
-          siteData;
+        return siteData;
       });
 
       chrome.storage.sync.set({blockedSites: updatedSites}, function() {
@@ -239,10 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function removeSite(site, li) {
     chrome.storage.sync.get('blockedSites', function(data) {
-      const blockedSites = data.blockedSites.filter(siteData => {
-        const siteName = typeof siteData === 'string' ? siteData : siteData.site;
-        return siteName !== site;
-      });
+      const blockedSites = data.blockedSites.filter(siteData => siteData.site !== site);
       
       chrome.storage.sync.set({blockedSites: blockedSites}, function() {
         li.remove();
@@ -263,11 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.sync.get(['blockedSites'], function(data) {
       if (data.blockedSites && data.blockedSites.length > 0) {
         data.blockedSites.forEach(siteData => {
-          if (typeof siteData === 'string') {
-            addSiteToList(siteData, false, null);
-          } else {
-            addSiteToList(siteData.site, siteData.hardBlock || false, siteData.hardBlockExpiry || null);
-          }
+          addSiteToList(siteData.site, siteData.hardBlock || false, siteData.hardBlockExpiry || null);
         });
         emptyStateMessage.style.display = 'none';
       } else {
